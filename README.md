@@ -1,36 +1,45 @@
 # Sistema Inteligente de Análise de Desempenho Escolar
 
-## 1. Introdução
+1. Introdução
 
-A transformação digital no ambiente educacional vem modificando significativamente a forma como escolas acompanham o desenvolvimento acadêmico dos alunos. Entretanto, muitas instituições ainda enfrentam dificuldades relacionadas à interpretação e utilização eficiente dos dados pedagógicos, limitando a capacidade de identificar problemas de aprendizagem de maneira precoce e estratégica.
+A transformação digital na educação vem mudando a forma como as escolas acompanham o desempenho dos alunos. Porém, muitas instituições ainda possuem dificuldades para interpretar e utilizar dados pedagógicos de forma eficiente, dificultando a identificação precoce de problemas de aprendizagem.
 
-Grande parte das escolas realiza o acompanhamento do desempenho estudantil apenas por meio de médias gerais, boletins e frequência escolar. Apesar de importantes, esses indicadores apresentam uma visão superficial do processo de aprendizagem, dificultando a identificação de dificuldades específicas dos alunos e atrasando intervenções pedagógicas mais assertivas.
+Normalmente, o acompanhamento é feito apenas por médias, boletins e frequência escolar. Embora importantes, esses indicadores oferecem uma visão limitada do aprendizado, atrasando intervenções pedagógicas mais assertivas.
 
-Nesse contexto, a integração de softwares educacionais com ferramentas analíticas surge como uma alternativa relevante para modernizar a gestão pedagógica.
+Nesse cenário, a integração de softwares educacionais com ferramentas analíticas surge como uma solução para modernizar a gestão pedagógica.
 
----
-
-## 2. Problemática
-
-O principal problema identificado na análise de desempenho escolar está relacionado à ausência de mecanismos inteligentes capazes de diagnosticar dificuldades específicas dos alunos em tempo hábil.
-
-Atualmente, em muitos ambientes escolares:
-
-- As notas são analisadas apenas de forma geral;
-- Professores possuem dificuldade em acompanhar individualmente todos os alunos;
-- Há excesso de processos manuais e pouca integração tecnológica;
-- A identificação de defasagens ocorre tardiamente;
-- Os responsáveis recebem informações limitadas sobre o aprendizado.
-
-### Como consequência:
-
-- O rendimento escolar diminui;
-- O aluno não recebe suporte direcionado;
-- A escola perde capacidade estratégica de intervenção.
-
-Outro fator crítico é que os sistemas tradicionais normalmente apresentam apenas indicadores quantitativos simples, sem aprofundamento analítico. Assim, um aluno pode possuir média razoável, mas apresentar deficiência grave em conteúdos específicos que futuramente comprometerão seu desenvolvimento acadêmico.
 
 ---
+
+2. Problemática
+
+O principal problema da análise de desempenho escolar é a falta de mecanismos inteligentes capazes de identificar dificuldades específicas dos alunos rapidamente.
+
+Em muitas escolas:
+
+As notas são analisadas apenas de forma geral;
+
+Professores têm dificuldade em acompanhar todos os alunos individualmente;
+
+Existem muitos processos manuais e pouca integração tecnológica;
+
+A identificação das defasagens acontece tardiamente;
+
+Os responsáveis recebem poucas informações sobre o aprendizado.
+
+
+Como consequência:
+
+O rendimento escolar diminui;
+
+O aluno não recebe suporte adequado;
+
+A escola perde capacidade de intervenção estratégica.
+
+
+Além disso, sistemas tradicionais apresentam apenas dados quantitativos simples, sem análises detalhadas. Assim, um aluno pode ter média razoável, mas apresentar dificuldades específicas que comprometem seu desenvolvimento futuro.
+
+--
 
 # Fluxograma do Sistema
 
