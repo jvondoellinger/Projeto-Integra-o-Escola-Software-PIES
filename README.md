@@ -42,6 +42,8 @@ Outro fator crítico é que os sistemas tradicionais normalmente apresentam apen
 # 👨‍🏫 Fluxograma — Professor
 
 ```mermaid
+%%{init: {'flowchart': {'curve': 'linear'}}}%%
+
 flowchart TD
 
     A([👨‍🏫 PROFESSOR])
@@ -93,6 +95,8 @@ flowchart TD
 # 👨‍🎓 Fluxograma — Aluno
 
 ```mermaid
+%%{init: {'flowchart': {'curve': 'linear'}}}%%
+
 flowchart TD
 
     A([👨‍🎓 ALUNO])
