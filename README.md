@@ -39,26 +39,26 @@ Outro fator crítico é que os sistemas tradicionais normalmente apresentam apen
   <img src="./fluxo3.jpeg" width="800"/>
 </p>
 
-# Fluxograma — Professor
+# 👨‍🏫 Fluxograma — Professor
 
 ```mermaid
 flowchart TD
 
-    A([PROFESSOR])
+    A([👨‍🏫 PROFESSOR])
 
-    B[1. LOGIN<br/>Usuário + Senha]
+    B["🔐 <b>1. LOGIN</b><br/><br/>Usuário + Senha"]
 
-    C{Credenciais válidas?}
+    C{"Credenciais válidas?"}
 
-    D[Erro de login<br/>Usuário ou senha inválidos]
+    D["❌ <b>ERRO DE LOGIN</b><br/><br/>Usuário ou senha inválidos"]
 
-    E[2. PAINEL - CURSOS<br/>Visualização dos cursos associados]
+    E["📚 <b>2. PAINEL - CURSOS</b><br/><br/>Visualização dos cursos associados ao professor"]
 
-    F[3. PAINEL - SEMESTRES DO CURSO<br/>Visualização dos semestres disponíveis]
+    F["📅 <b>3. PAINEL - SEMESTRES</b><br/><br/>Visualização dos semestres disponíveis"]
 
-    G[4. PAINEL - DESEMPENHO DOS ALUNOS<br/>Desempenho por curso e semestre]
+    G["📊 <b>4. PAINEL - DESEMPENHO</b><br/><br/>Desempenho dos alunos por curso"]
 
-    H([LOGOUT])
+    H([🚪 LOGOUT])
 
     A --> B
     B --> C
@@ -75,28 +75,39 @@ flowchart TD
 
     F --> H
     G --> H
+
+    %% CORES
+
+    style A fill:#061739,color:#fff,stroke:#061739,stroke-width:3px
+    style B fill:#0D6EFD,color:#fff,stroke:#0D6EFD,stroke-width:2px
+    style C fill:#ffffff,color:#111,stroke:#0D6EFD,stroke-width:3px
+    style D fill:#FFEBEE,color:#C62828,stroke:#E53935,stroke-width:3px
+    style E fill:#E8F5E9,color:#1B5E20,stroke:#00C853,stroke-width:3px
+    style F fill:#F3E5F5,color:#6A1B9A,stroke:#8E24AA,stroke-width:3px
+    style G fill:#FFF3E0,color:#E65100,stroke:#FB8C00,stroke-width:3px
+    style H fill:#ECEFF1,color:#111,stroke:#90A4AE,stroke-width:3px
 ```
 
 ---
 
-# Fluxograma — Aluno
+# 👨‍🎓 Fluxograma — Aluno
 
 ```mermaid
 flowchart TD
 
-    A([ALUNO])
+    A([👨‍🎓 ALUNO])
 
-    B[1. LOGIN<br/>Usuário + Senha]
+    B["🔐 <b>1. LOGIN</b><br/><br/>Usuário + Senha"]
 
-    C{Credenciais válidas?}
+    C{"Credenciais válidas?"}
 
-    D[Erro de login<br/>Usuário ou senha inválidos]
+    D["❌ <b>ERRO DE LOGIN</b><br/><br/>Usuário ou senha inválidos"]
 
-    E[2. PAINEL - SEMESTRES DO CURSO<br/>Visualização dos semestres disponíveis]
+    E["📅 <b>2. PAINEL - SEMESTRES</b><br/><br/>Semestres disponíveis do curso"]
 
-    F[3. PAINEL - DESEMPENHO PRÓPRIO<br/>Visualização do desempenho acadêmico]
+    F["📈 <b>3. PAINEL - DESEMPENHO</b><br/><br/>Desempenho acadêmico do aluno"]
 
-    G([LOGOUT])
+    G([🚪 LOGOUT])
 
     A --> B
     B --> C
@@ -110,4 +121,14 @@ flowchart TD
 
     E --> G
     F --> G
+
+    %% CORES
+
+    style A fill:#061739,color:#fff,stroke:#061739,stroke-width:3px
+    style B fill:#0D6EFD,color:#fff,stroke:#0D6EFD,stroke-width:2px
+    style C fill:#ffffff,color:#111,stroke:#0D6EFD,stroke-width:3px
+    style D fill:#FFEBEE,color:#C62828,stroke:#E53935,stroke-width:3px
+    style E fill:#E8F5E9,color:#1B5E20,stroke:#00C853,stroke-width:3px
+    style F fill:#FFF3E0,color:#E65100,stroke:#FB8C00,stroke-width:3px
+    style G fill:#ECEFF1,color:#111,stroke:#90A4AE,stroke-width:3px
 ```
