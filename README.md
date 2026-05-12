@@ -36,4 +36,5 @@ Outro fator crítico é que os sistemas tradicionais normalmente apresentam apen
 
 <p align="center">
   <img src="./fluxo.jpeg" width="800"/>
+  <img src="./fluxo2.jpeg" width="800"/>
 </p>
