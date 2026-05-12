@@ -35,5 +35,5 @@ Outro fator crítico é que os sistemas tradicionais normalmente apresentam apen
 # Fluxograma do Sistema
 
 <p align="center">
-  <img src="./fluxograma.jpeg" width="800"/>
+  <img src="./fluxo.jpeg" width="800"/>
 </p>
