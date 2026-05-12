@@ -1,6 +1,6 @@
 # Sistema Inteligente de Análise de Desempenho Escolar
 
-1. Introdução
+## 1. Introdução
 
 A transformação digital na educação vem mudando a forma como as escolas acompanham o desempenho dos alunos. Porém, muitas instituições ainda possuem dificuldades para interpretar e utilizar dados pedagógicos de forma eficiente, dificultando a identificação precoce de problemas de aprendizagem.
 
@@ -11,7 +11,7 @@ Nesse cenário, a integração de softwares educacionais com ferramentas analít
 
 ---
 
-2. Problemática
+## 2. Problemática
 
 O principal problema da análise de desempenho escolar é a falta de mecanismos inteligentes capazes de identificar dificuldades específicas dos alunos rapidamente.
 
@@ -28,7 +28,7 @@ A identificação das defasagens acontece tardiamente;
 Os responsáveis recebem poucas informações sobre o aprendizado.
 
 
-Como consequência:
+### Como consequência:
 
 O rendimento escolar diminui;
 
