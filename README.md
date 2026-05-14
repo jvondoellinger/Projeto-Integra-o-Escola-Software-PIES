@@ -283,3 +283,155 @@ Entretanto, o sucesso dessa integração depende não apenas da tecnologia, mas 
 O PIES não substitui o papel do educador, mas potencializa sua capacidade de tomada de decisão com base em informações concretas.
 
 Dessa forma, o projeto se apresenta como uma solução realista e inovadora para elevar o desempenho escolar, reduzir defasagens e construir uma educação mais eficiente, preventiva e orientada por dados.
+
+
+
+
+
+
+
+
+
+
+
+
+---
+
+# 8. Demonstração Visual do Sistema
+
+## Dashboard de Desempenho Acadêmico — Passo a Passo
+
+Abaixo está o fluxo visual completo do sistema, demonstrando desde a tela inicial até a visualização detalhada dos dados pedagógicos dos alunos.
+
+---
+
+# 1. Página Inicial — Visão Geral
+
+A tela inicial apresenta os cursos disponíveis e um resumo visual do desempenho acadêmico.
+
+### Destaques
+
+- Cards de cursos;
+- Indicadores de desempenho;
+- Evolução acadêmica;
+- Quantidade de avaliações;
+- Alertas pedagógicos.
+
+<p align="center">
+  <img src="./assets/dashboard-home.png" width="1000"/>
+</p>
+
+---
+
+# 2. Aplicação de Filtros
+
+O sistema permite refinar os dados exibidos através de filtros inteligentes.
+
+### Campos disponíveis
+
+| Campo | Função |
+|---|---|
+| Ano letivo | Filtra por período escolar |
+| Escola | Filtra por unidade |
+| Etapa de ensino | Segmenta o nível educacional |
+| Professor(a) | Filtra turmas específicas |
+| Situação da turma | Exibe condições pedagógicas |
+
+<p align="center">
+  <img src="./assets/dashboard-filtros.png" width="1000"/>
+</p>
+
+---
+
+# 3. Barra Lateral (Menu)
+
+A barra lateral fornece acesso rápido às principais funcionalidades da plataforma.
+
+### Funcionalidades disponíveis
+
+- Início;
+- Turmas;
+- Desempenho;
+- Avaliações;
+- Relatórios;
+- Metas;
+- Alertas;
+- Calendário;
+- Configurações.
+
+<p align="center">
+  <img src="./assets/dashboard-sidebar.png" width="1000"/>
+</p>
+
+---
+
+# 4. Navegação por Semestres
+
+Ao selecionar um curso, o sistema apresenta os semestres disponíveis para acompanhamento detalhado.
+
+Cada card contém:
+
+- Desempenho geral;
+- Evolução;
+- Avaliações;
+- Alertas;
+- Indicadores pedagógicos.
+
+<p align="center">
+  <img src="./assets/dashboard-semestres.png" width="1000"/>
+</p>
+
+---
+
+# 5. Tela Final — Dados do Semestre
+
+Na visualização final, o professor pode acompanhar os dados individuais dos alunos pertencentes ao semestre selecionado.
+
+### Informações disponíveis
+
+| Indicador | Descrição |
+|---|---|
+| Frequência | Presença do aluno |
+| Média Atual | Desempenho atual |
+| Média Anterior | Comparativo evolutivo |
+| Avaliações | Quantidade de avaliações |
+| Alertas | Riscos pedagógicos |
+| Status | Situação geral do aluno |
+
+<p align="center">
+  <img src="./assets/dashboard-final.png" width="1000"/>
+</p>
+
+---
+
+# Fluxo Completo de Navegação
+
+```text
+Página Inicial
+      ↓
+Aplicação de Filtros
+      ↓
+Barra Lateral
+      ↓
+Seleção de Curso
+      ↓
+Navegação por Semestres
+      ↓
+Visualização Detalhada dos Alunos
+```
+
+---
+
+# Considerações sobre a Interface
+
+A interface do sistema foi projetada com foco em:
+
+- Simplicidade operacional;
+- Visualização clara de indicadores;
+- Navegação intuitiva;
+- Monitoramento em tempo real;
+- Acompanhamento pedagógico contínuo;
+- Tomada de decisão baseada em dados.
+
+Além disso, os dashboards permitem identificação rápida de riscos pedagógicos, facilitando intervenções preventivas e acompanhamento individualizado dos estudantes.
+
