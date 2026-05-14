@@ -318,7 +318,7 @@ A tela inicial apresenta os cursos disponíveis e um resumo visual do desempenho
 - Alertas pedagógicos.
 
 <p align="center">
-  <img src="./home.png" width="1000"/>
+  <img src="./home2.png" width="1000"/>
 </p>
 
 ---
@@ -338,7 +338,7 @@ O sistema permite refinar os dados exibidos através de filtros inteligentes.
 | Situação da turma | Exibe condições pedagógicas |
 
 <p align="center">
-  <img src="./filtros.png" width="1000"/>
+  <img src="./filtros2.png" width="1000"/>
 </p>
 
 ---
@@ -360,7 +360,7 @@ A barra lateral fornece acesso rápido às principais funcionalidades da platafo
 - Configurações.
 
 <p align="center">
-  <img src="./sidebar.png" width="1000"/>
+  <img src="./sidebar2.png" width="1000"/>
 </p>
 
 ---
@@ -378,7 +378,7 @@ Cada card contém:
 - Indicadores pedagógicos.
 
 <p align="center">
-  <img src="./semestres.png" width="1000"/>
+  <img src="./semestres2.png" width="1000"/>
 </p>
 
 ---
@@ -399,7 +399,7 @@ Na visualização final, o professor pode acompanhar os dados individuais dos al
 | Status | Situação geral do aluno |
 
 <p align="center">
-  <img src="./final.png" width="1000"/>
+  <img src="./final2.png" width="1000"/>
 </p>
 
 ---
