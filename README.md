@@ -303,6 +303,10 @@ Dessa forma, o projeto se apresenta como uma solução realista e inovadora para
 
 Abaixo está o fluxo visual completo do sistema, demonstrando desde a tela inicial até a visualização detalhada dos dados pedagógicos dos alunos.
 
+
+
+
+
 ---
 
 # 1. Página Inicial — Visão Geral
