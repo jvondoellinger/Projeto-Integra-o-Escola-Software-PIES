@@ -360,7 +360,7 @@ A barra lateral fornece acesso rápido às principais funcionalidades da platafo
 - Configurações.
 
 <p align="center">
-  <img src="./sidebar2.png" width="500"/>
+  <img src="./sidebar2.png" height="700"/>
 </p>
 
 ---
