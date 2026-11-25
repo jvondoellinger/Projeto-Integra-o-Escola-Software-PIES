@@ -1,6 +1,6 @@
 import SchoolFeed from "./SchoolFeed.jsx";
 import ContextRail from "./ContextRail.jsx";
-import React, { useEffect, useRef, useState } from "react";
+import React, { useCallback, useEffect, useRef, useState } from "react";
 import { createRoot } from "react-dom/client";
 import {
   GraduationCap,
@@ -23,7 +23,7 @@ import {
 import { Accounts, Enrollment, Classes, Reports, roles } from "./Office.jsx";
 import { Diary, Evaluations, Closing, FollowUp } from "./Teaching.jsx";
 import { Calendar, Notices, Family, Activities } from "./Community.jsx";
-import { Field, Form, Panel } from "./ui.jsx";
+import { ActionFeedback, ActionForm, Field, Form, Panel } from "./ui.jsx";
 import "@fontsource/dm-sans/latin-400.css";
 import "@fontsource/dm-sans/latin-600.css";
 import "@fontsource/dm-sans/latin-700.css";
@@ -318,22 +318,18 @@ function App() {
     }
   }
   async function exit() {
-    if (
-      pending &&
-      !window.confirm(
-        "Há chamadas no dispositivo. Sair descarta as chamadas ainda não enviadas. Confirmar?",
-      )
-    )
-      return;
     try {
       await request("logout", {});
       writeQueue(user, []);
       setSession(null);
       open("inicio");
+      return true;
     } catch (e) {
       setError(e.message);
+      return false;
     }
   }
+  const clearError = useCallback(() => setError(""), []);
   if (loading)
     return <main className="school-loading">Carregando o PIES…</main>;
   if (!session)
@@ -343,6 +339,26 @@ function App() {
   const allowed = navigation.filter((n) => !n[3] || n[3].includes(user.role));
   const current = allowed.find((n) => n[0] === page) || allowed[0];
   const [id, label] = current;
+  function exitAction(label, className) {
+    return pending ? (
+      <ActionForm
+        title="Sair com chamadas pendentes?"
+        trigger={label}
+        triggerClass={className}
+        button="Descartar chamadas e sair"
+        onSubmit={exit}
+      >
+        <p>
+          As chamadas que aguardam envio neste dispositivo serão descartadas.
+        </p>
+      </ActionForm>
+    ) : (
+      <button className={className} onClick={exit}>
+        {label === "Sair" && <LogOut size={18} />}
+        {label}
+      </button>
+    );
+  }
   const content = {
     inicio: <SchoolFeed state={state} user={user} open={open} />,
     matriculas: <Enrollment state={state} send={send} />,
@@ -395,16 +411,13 @@ function App() {
         subtitle="As alterações feitas nesta escola de exemplo são guardadas neste navegador."
       >
         <p>Saia do perfil para explorar outra área.</p>
-        <button className="school-secondary" onClick={exit}>
-          Trocar de perfil
-        </button>
+        {exitAction("Trocar de perfil", "school-secondary")}
       </Panel>
     ) : (
-      <Panel
-        title="Alterar senha"
-        subtitle="Depois da alteração, entre novamente com a nova senha."
-      >
-        <Form
+      <Panel title="Segurança da conta">
+        <ActionForm
+          title="Alterar senha"
+          trigger="Alterar senha"
           button="Alterar senha"
           onSubmit={async (d) => {
             try {
@@ -413,11 +426,14 @@ function App() {
               setSession(null);
               setError("");
               open("inicio");
+              return true;
             } catch (e) {
               setError(e.message);
+              return false;
             }
           }}
         >
+          <p>Depois da alteração, entre novamente com a nova senha.</p>
           <Field
             label="Senha atual"
             name="current"
@@ -431,7 +447,7 @@ function App() {
             autoComplete="new-password"
             minLength={12}
           />
-        </Form>
+        </ActionForm>
         <h3>Dados pessoais</h3>
         <p>
           Procure a secretaria da sua escola para solicitar acesso ou correção
@@ -441,112 +457,119 @@ function App() {
     ),
   };
   return (
-    <div className="school-shell">
-      <a
-        className="school-skip"
-        href="#conteudo"
-        onClick={(e) => {
-          e.preventDefault();
-          document.querySelector("main").focus();
-        }}
-      >
-        Pular para o conteúdo
-      </a>
-      <aside className={mobile ? "school-side is-open" : "school-side"}>
-        <Brand />
-        <p className="school-unit">{state.name || "Gestão de rede"}</p>
-        <nav aria-label="Áreas do PIES">
-          {allowed.map(([key, name, Icon]) => (
+    <ActionFeedback.Provider value={{ error, clearError }}>
+      <div className="school-shell">
+        <a
+          className="school-skip"
+          href="#conteudo"
+          onClick={(e) => {
+            e.preventDefault();
+            document.querySelector("main").focus();
+          }}
+        >
+          Pular para o conteúdo
+        </a>
+        <aside className={mobile ? "school-side is-open" : "school-side"}>
+          <Brand />
+          <p className="school-unit">{state.name || "Gestão de rede"}</p>
+          <nav aria-label="Áreas do PIES">
+            {allowed.map(([key, name, Icon]) => (
+              <button
+                className={key === id ? "active" : ""}
+                aria-current={key === id ? "page" : undefined}
+                key={key}
+                onClick={() => open(key)}
+              >
+                <Icon size={19} />
+                {name}
+              </button>
+            ))}
+          </nav>
+          {exitAction("Sair", "school-exit")}
+        </aside>
+        <div className="school-body">
+          <header className="school-top">
             <button
-              className={key === id ? "active" : ""}
-              aria-current={key === id ? "page" : undefined}
-              key={key}
-              onClick={() => open(key)}
+              className="school-menu"
+              onClick={() => setMobile(!mobile)}
+              aria-expanded={mobile}
+              aria-label={mobile ? "Fechar menu" : "Abrir menu"}
             >
-              <Icon size={19} />
-              {name}
+              <Menu size={22} />
             </button>
-          ))}
-        </nav>
-        <button className="school-exit" onClick={exit}>
-          <LogOut size={18} />
-          Sair
-        </button>
-      </aside>
-      <div className="school-body">
-        <header className="school-top">
-          <button
-            className="school-menu"
-            onClick={() => setMobile(!mobile)}
-            aria-expanded={mobile}
-            aria-label={mobile ? "Fechar menu" : "Abrir menu"}
-          >
-            <Menu size={22} />
-          </button>
-          <span>
-            {roles[user.role]} <ChevronRight size={14} /> {label}
-          </span>
-          {isPagesPreview && <span className="school-pill">Demonstração</span>}
-          <strong>{user.name}</strong>
-        </header>
-        <main id="conteudo" tabIndex="-1" className="school-main">
-          <header className="school-heading">
-            <span>{state.name || "PIES · REDE DE ENSINO"}</span>
-            <h1>{headings[id] || label}</h1>
+            <span>
+              {roles[user.role]} <ChevronRight size={14} /> {label}
+            </span>
+            {isPagesPreview && (
+              <span className="school-pill">Demonstração</span>
+            )}
+            <strong>{user.name}</strong>
           </header>
-          {pending > 0 && (
-            <div className="school-callout">
-              <strong>{pending} chamada(s) aguardando envio</strong>
-              <div className="school-actions">
-                <button onClick={sync}>Sincronizar chamadas</button>
-                <button
-                  onClick={() => {
-                    if (
-                      window.confirm(
-                        "Descartar as chamadas pendentes neste dispositivo?",
-                      )
-                    ) {
-                      writeQueue(user, []);
-                      setPending(0);
-                      setError("");
-                    }
-                  }}
-                >
-                  Descartar fila local
-                </button>
-              </div>
-            </div>
-          )}
-          {error && (
-            <div role="alert" className="school-error">
-              {error}
-            </div>
-          )}
-          {message && (
-            <div role="status" className="school-success">
-              {message}
-            </div>
-          )}
-          <div key={`${id}:${routeDetail || ""}`}>
-            {id === "inicio" || id === "agenda" ? (
-              content[id]
-            ) : (
-              <div className="workspace-feed">
-                <div className="workspace-main">{content[id]}</div>
-                <ContextRail
-                  page={id}
-                  state={state}
-                  user={user}
-                  studentId={focusedStudent}
-                  open={open}
-                />
+          <main id="conteudo" tabIndex="-1" className="school-main">
+            <header className="school-heading">
+              <span>{state.name || "PIES · REDE DE ENSINO"}</span>
+              <h1>{headings[id] || label}</h1>
+            </header>
+            {pending > 0 && (
+              <div className="school-callout">
+                <strong>{pending} chamada(s) aguardando envio</strong>
+                <div className="school-actions">
+                  <button onClick={sync}>Sincronizar chamadas</button>
+                  <ActionForm
+                    title="Descartar fila local"
+                    trigger="Descartar fila local"
+                    triggerClass="school-secondary"
+                    button="Descartar chamadas"
+                    onSubmit={() => {
+                      try {
+                        writeQueue(user, []);
+                        setPending(0);
+                        setError("");
+                        return true;
+                      } catch (error) {
+                        setError(error.message);
+                        return false;
+                      }
+                    }}
+                  >
+                    <p>
+                      Esta ação remove as chamadas pendentes deste dispositivo.
+                    </p>
+                  </ActionForm>
+                </div>
               </div>
             )}
-          </div>
-          <footer className="school-footer">PIES · Gestão escolar</footer>
-        </main>
+            {error && (
+              <div role="alert" className="school-error school-page-error">
+                {error}
+              </div>
+            )}
+            {message && (
+              <div role="status" className="school-success">
+                {message}
+              </div>
+            )}
+            <div key={`${id}:${routeDetail || ""}`}>
+              {id === "inicio" || id === "agenda" ? (
+                content[id]
+              ) : (
+                <div className="workspace-feed">
+                  <div className="workspace-main">{content[id]}</div>
+                  <ContextRail
+                    page={id}
+                    state={state}
+                    user={user}
+                    studentId={focusedStudent}
+                    open={open}
+                  />
+                </div>
+              )}
+            </div>
+            <footer className="school-footer">PIES · Gestão escolar</footer>
+          </main>
+        </div>
       </div>
-    </div>
+    </ActionFeedback.Provider>
   );
 }
 createRoot(document.getElementById("root")).render(<App />);

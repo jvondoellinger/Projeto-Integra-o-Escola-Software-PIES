@@ -8,7 +8,7 @@ import MonthCalendar, { titleForDay } from "./MonthCalendar.jsx";
 import PerformanceChart from "../PerformanceChart.jsx";
 import React, { useState, useRef } from "react";
 import {
-  Form,
+  ActionForm,
   Field,
   Panel,
   br,
@@ -26,6 +26,7 @@ export function Diary({ state, send, initialId }) {
   const [classId, setClass] = useState(initialLesson?.classId || ""),
     [day, setDay] = useState(initialLesson?.day || nowDate()),
     [editing, setEditing] = useState(initialLesson || null);
+  const [lessonDialog, setLessonDialog] = useState(Boolean(initialLesson));
   const [showCalendar, setShowCalendar] = useState(false);
   const registered = state.lessons.filter(
     (l) => !classId || l.classId === classId,
@@ -93,12 +94,25 @@ export function Diary({ state, send, initialId }) {
           />
         )}
         {pupils.length > 0 ? (
-          <Form
-            key={`${classId}-${day}-${editing?.id}-${editing?.revision}`}
-            button={editing ? "Salvar correção da chamada" : "Registrar aula"}
-            onSubmit={async (d) => {
-              if (
-                await send(
+          <>
+            <button
+              className="school-primary school-create-actions"
+              aria-haspopup="dialog"
+              onClick={() => setLessonDialog(true)}
+            >
+              Registrar aula
+            </button>
+            <ActionForm
+              title={editing ? "Corrigir chamada" : "Registrar aula"}
+              open={lessonDialog}
+              onDismiss={() => {
+                setLessonDialog(false);
+                setEditing(null);
+              }}
+              key={`${classId}-${day}-${editing?.id}-${editing?.revision}`}
+              button={editing ? "Salvar correção da chamada" : "Registrar aula"}
+              onSubmit={(d) =>
+                send(
                   "lesson",
                   {
                     classId,
@@ -115,43 +129,42 @@ export function Diary({ state, send, initialId }) {
                   },
                   { offline: true },
                 )
-              )
-                setEditing(null);
-            }}
-          >
-            <Field
-              label="Horário da aula"
-              name="slot"
-              type="time"
-              value={editing?.slot}
-            />
-            <Field
-              label="Duração em minutos"
-              name="minutes"
-              type="number"
-              min={1}
-              max={720}
-              value={editing?.minutes || 50}
-            />
-            <Field
-              label="Conteúdo ministrado"
-              name="topic"
-              type="textarea"
-              value={editing?.topic}
-            />
-            {pupils.map((s) => (
+              }
+            >
               <Field
-                key={s.id}
-                label={`Presença de ${s.name}`}
-                name={s.id}
-                options={["Presente", "Falta", "Justificada"]}
-                value={
-                  editing?.attendance.find((a) => a.studentId === s.id)
-                    ?.status || "Presente"
-                }
+                label="Horário da aula"
+                name="slot"
+                type="time"
+                value={editing?.slot}
               />
-            ))}
-          </Form>
+              <Field
+                label="Duração em minutos"
+                name="minutes"
+                type="number"
+                min={1}
+                max={720}
+                value={editing?.minutes || 50}
+              />
+              <Field
+                label="Conteúdo ministrado"
+                name="topic"
+                type="textarea"
+                value={editing?.topic}
+              />
+              {pupils.map((s) => (
+                <Field
+                  key={s.id}
+                  label={`Presença de ${s.name}`}
+                  name={s.id}
+                  options={["Presente", "Falta", "Justificada"]}
+                  value={
+                    editing?.attendance.find((a) => a.studentId === s.id)
+                      ?.status || "Presente"
+                  }
+                />
+              ))}
+            </ActionForm>
+          </>
         ) : (
           <p className="school-empty">
             {classId
@@ -174,7 +187,7 @@ export function Diary({ state, send, initialId }) {
                 setClass(l.classId);
                 setDay(l.day);
                 setEditing(l);
-                window.scrollTo(0, 0);
+                setLessonDialog(true);
               }}
             >
               <p className="record-detail">
@@ -196,7 +209,10 @@ export function Diary({ state, send, initialId }) {
               tone={j.state === "Pendente" ? "gold" : "green"}
             >
               {j.state === "Pendente" ? (
-                <Form
+                <ActionForm
+                  title={`Revisar justificativa de ${nameOf(state.students, j.studentId)}`}
+                  trigger="Registrar decisão"
+                  triggerClass="school-secondary"
                   button="Registrar decisão"
                   onSubmit={(d) => send("decide", { ...d, id: j.id })}
                 >
@@ -206,7 +222,7 @@ export function Diary({ state, send, initialId }) {
                     options={["Aceita", "Recusada"]}
                   />
                   <Field label="Retorno" name="response" optional />
-                </Form>
+                </ActionForm>
               ) : (
                 j.response && <p className="record-detail">{j.response}</p>
               )}
@@ -219,6 +235,7 @@ export function Diary({ state, send, initialId }) {
 }
 export function Evaluations({ state, send, initialId }) {
   const [open, setOpen] = useState(initialId);
+  const [assessmentDialog, setAssessmentDialog] = useState(false);
   const [editing, setEditing] = useState(null),
     [listClass, setListClass] = useState(""),
     [listState, setListState] = useState("ativas");
@@ -234,106 +251,109 @@ export function Evaluations({ state, send, initialId }) {
   const c = state.classes.find((x) => x.id === selected?.classId);
   return (
     <>
-      <Panel
+      <ActionForm
         title={editing ? "Editar avaliação" : "Planejar avaliação"}
-        subtitle="Atividades publicadas entram no calendário e aparecem no portal da turma."
+        open={assessmentDialog}
+        onDismiss={() => {
+          setAssessmentDialog(false);
+          setEditing(null);
+        }}
+        key={editing?.id || "new"}
+        button={editing ? "Salvar alterações" : "Publicar ou agendar"}
+        onSubmit={(d, f) =>
+          send("assessment", {
+            ...d,
+            id: editing?.id,
+            classId: editing?.classId || d.classId,
+            recovery: f.has("recovery"),
+          })
+        }
       >
-        <Form
-          key={editing?.id || "new"}
-          button={editing ? "Salvar alterações" : "Publicar ou agendar"}
-          onSubmit={async (d, f) => {
-            if (
-              await send("assessment", {
-                ...d,
-                id: editing?.id,
-                classId: editing?.classId || d.classId,
-                recovery: f.has("recovery"),
-              })
-            )
-              setEditing(null);
+        <Field
+          label="Turma da avaliação"
+          name="classId"
+          options={opts(state.classes)}
+          value={editing?.classId}
+          disabled={!!editing}
+        />
+        <Field
+          label="Título da avaliação"
+          name="title"
+          value={editing?.title}
+        />
+        <Field
+          label="Formato"
+          name="format"
+          value={editing?.format}
+          options={[
+            "Prova",
+            "Atividade em sala",
+            "Atividade de casa",
+            "Trabalho de longo prazo",
+          ]}
+        />
+        <Field
+          label="Publicação"
+          name="published"
+          type="date"
+          value={editing?.published || nowDate()}
+        />
+        <Field
+          label="Prazo ou dia da prova"
+          name="day"
+          type="date"
+          value={editing?.day}
+        />
+        <Field
+          label="Antecedência do lembrete (dias)"
+          name="reminderDays"
+          type="number"
+          min={1}
+          max={30}
+          value={editing?.reminderDays || 3}
+        />
+        <Field
+          label="Peso"
+          name="weight"
+          type="number"
+          min={0.1}
+          max={100}
+          step="0.1"
+          value={editing?.weight || 1}
+        />
+        <Field
+          label="Orientações"
+          name="instructions"
+          type="textarea"
+          value={editing?.instructions}
+        />
+        <Field
+          label="Material de apoio"
+          name="material"
+          value={editing?.material}
+          type="textarea"
+          optional
+        />
+        <label className="school-check">
+          <input
+            type="checkbox"
+            name="recovery"
+            defaultChecked={editing?.recovery}
+          />{" "}
+          Recuperação
+        </label>
+      </ActionForm>
+      <Panel title="Avaliações planejadas">
+        <button
+          className="school-primary school-create-actions"
+          aria-haspopup="dialog"
+          onClick={() => {
+            setEditing(null);
+            setAssessmentDialog(true);
           }}
         >
-          <Field
-            label="Turma da avaliação"
-            name="classId"
-            options={opts(state.classes)}
-            value={editing?.classId}
-            disabled={!!editing}
-          />
-          <Field
-            label="Título da avaliação"
-            name="title"
-            value={editing?.title}
-          />
-          <Field
-            label="Formato"
-            name="format"
-            value={editing?.format}
-            options={[
-              "Prova",
-              "Atividade em sala",
-              "Atividade de casa",
-              "Trabalho de longo prazo",
-            ]}
-          />
-          <Field
-            label="Publicação"
-            name="published"
-            type="date"
-            value={editing?.published || nowDate()}
-          />
-          <Field
-            label="Prazo ou dia da prova"
-            name="day"
-            type="date"
-            value={editing?.day}
-          />
-          <Field
-            label="Antecedência do lembrete (dias)"
-            name="reminderDays"
-            type="number"
-            min={1}
-            max={30}
-            value={editing?.reminderDays || 3}
-          />
-          <Field
-            label="Peso"
-            name="weight"
-            type="number"
-            min={0.1}
-            max={100}
-            step="0.1"
-            value={editing?.weight || 1}
-          />
-          <Field
-            label="Orientações"
-            name="instructions"
-            type="textarea"
-            value={editing?.instructions}
-          />
-          <Field
-            label="Material de apoio"
-            name="material"
-            value={editing?.material}
-            type="textarea"
-            optional
-          />
-          <label className="school-check">
-            <input
-              type="checkbox"
-              name="recovery"
-              defaultChecked={editing?.recovery}
-            />{" "}
-            Recuperação
-          </label>
-        </Form>
-        {editing && (
-          <button className="school-secondary" onClick={() => setEditing(null)}>
-            Cancelar edição
-          </button>
-        )}
-      </Panel>
-      <Panel title="Avaliações planejadas">
+          Planejar avaliação
+        </button>
         <div className="school-filters">
           <label>
             Turma das avaliações
@@ -398,21 +418,32 @@ export function Evaluations({ state, send, initialId }) {
                   <button
                     onClick={() => {
                       setEditing(a);
-                      window.scrollTo(0, 0);
+                      setAssessmentDialog(true);
                     }}
                   >
                     Editar avaliação
                   </button>
-                  <button
-                    onClick={() =>
+                  <ActionForm
+                    title={
+                      a.archived ? "Reativar avaliação" : "Arquivar avaliação"
+                    }
+                    trigger={a.archived ? "Reativar" : "Arquivar"}
+                    triggerClass="school-secondary"
+                    button={
+                      a.archived ? "Reativar avaliação" : "Arquivar avaliação"
+                    }
+                    onSubmit={() =>
                       send("archiveAssessment", {
                         id: a.id,
                         archived: !a.archived,
                       })
                     }
                   >
-                    {a.archived ? "Reativar" : "Arquivar"}
-                  </button>
+                    <p>
+                      {a.archived ? "Reativar" : "Arquivar"} a avaliação{" "}
+                      {a.title}?
+                    </p>
+                  </ActionForm>
                 </div>
               </RecordCard>
             );
@@ -441,7 +472,18 @@ export function Evaluations({ state, send, initialId }) {
                   {sub && (
                     <p className="school-pre school-callout">{sub.text}</p>
                   )}
-                  <Form
+                  {g && (
+                    <p className="record-detail school-pre">
+                      {g.score == null
+                        ? "Devolutiva"
+                        : `Nota ${grade(g.score)}`}
+                      {g.feedback && ` · ${g.feedback}`}
+                    </p>
+                  )}
+                  <ActionForm
+                    title={`Corrigir avaliação de ${s.name}`}
+                    trigger="Lançar ou editar nota"
+                    triggerClass="school-secondary"
                     button={`Salvar avaliação de ${s.name}`}
                     onSubmit={(d) =>
                       send("grade", {
@@ -469,7 +511,7 @@ export function Evaluations({ state, send, initialId }) {
                       value={g?.feedback}
                       optional={c.stage !== "Educação Infantil"}
                     />
-                  </Form>
+                  </ActionForm>
                 </article>
               );
             })}
@@ -588,27 +630,42 @@ export function Closing({ state, send, office }) {
             {office && (
               <div className="school-actions">
                 {(!closure || closure.state === "Reaberto") && (
-                  <button
-                    onClick={() =>
+                  <ActionForm
+                    title="Fechar período"
+                    trigger="Fechar período"
+                    button="Fechar período"
+                    onSubmit={() =>
                       send("closure", { classId, periodId, state: "Fechado" })
                     }
                   >
-                    Fechar período
-                  </button>
+                    <p>
+                      Revise as notas e a frequência antes de fechar este
+                      período.
+                    </p>
+                  </ActionForm>
                 )}
                 {closure?.state === "Fechado" && (
-                  <button
-                    onClick={() =>
+                  <ActionForm
+                    title="Publicar boletins"
+                    trigger="Publicar boletins"
+                    button="Publicar boletins"
+                    onSubmit={() =>
                       send("closure", { classId, periodId, state: "Publicado" })
                     }
                   >
-                    Publicar boletins
-                  </button>
+                    <p>
+                      Os boletins deste período ficarão disponíveis para os
+                      estudantes e seus responsáveis.
+                    </p>
+                  </ActionForm>
                 )}
               </div>
             )}
             {office && closure && closure.state !== "Reaberto" && (
-              <Form
+              <ActionForm
+                title="Reabrir período"
+                trigger="Reabrir período"
+                triggerClass="school-secondary"
                 button="Reabrir período"
                 onSubmit={(d) =>
                   send("closure", {
@@ -620,22 +677,31 @@ export function Closing({ state, send, office }) {
                 }
               >
                 <Field label="Motivo da reabertura" name="reason" />
-              </Form>
+              </ActionForm>
             )}
           </>
         )}
       </Panel>
       {office && (
-        <div className="school-grid">
-          <Panel title="Criar período letivo">
-            <Form onSubmit={(d) => send("period", d)}>
+        <Panel title="Configuração acadêmica">
+          <div className="school-actions">
+            <ActionForm
+              title="Criar período letivo"
+              trigger="Criar período"
+              button="Criar período"
+              onSubmit={(d) => send("period", d)}
+            >
               <Field label="Nome do período" name="name" />
               <Field label="Início do período" name="start" type="date" />
               <Field label="Fim do período" name="end" type="date" />
-            </Form>
-          </Panel>
-          <Panel title="Critérios escolares">
-            <Form onSubmit={(d) => send("policy", d)}>
+            </ActionForm>
+
+            <ActionForm
+              title="Editar critérios escolares"
+              trigger="Editar critérios"
+              triggerClass="school-secondary"
+              onSubmit={(d) => send("policy", d)}
+            >
               <Field
                 label="Ano padrão"
                 name="year"
@@ -676,9 +742,9 @@ export function Closing({ state, send, office }) {
                 ]}
                 value={state.policy.grading}
               />
-            </Form>
-          </Panel>
-        </div>
+            </ActionForm>
+          </div>
+        </Panel>
       )}
     </>
   );
@@ -687,6 +753,7 @@ export function FollowUp({ state, send, initialId }) {
   const initialCase = state.cases.find((c) => c.id === initialId);
   const [classId, setClass] = useState(initialCase?.classId || ""),
     [editing, setEditing] = useState(initialCase || null);
+  const [caseDialog, setCaseDialog] = useState(Boolean(initialCase));
   const [profileId, setProfileId] = useState("");
   const profile = state.students.find((student) => student.id === profileId);
   const profileGrades = profile
@@ -790,6 +857,7 @@ export function FollowUp({ state, send, initialId }) {
               onOpen={() => {
                 setClass(s.classId);
                 setEditing({ ...s, title: s.flags.join(" · ") });
+                setCaseDialog(true);
               }}
             />
           ))}
@@ -809,6 +877,7 @@ export function FollowUp({ state, send, initialId }) {
               onOpen={() => {
                 setClass(c.classId);
                 setEditing(c);
+                setCaseDialog(true);
               }}
             >
               <p className="record-detail">{c.action}</p>
@@ -839,62 +908,78 @@ export function FollowUp({ state, send, initialId }) {
           </select>
         </label>
         {classId && (
-          <Form
-            key={JSON.stringify([classId, editing?.id, editing?.studentId])}
-            onSubmit={async (d) => {
-              if (await send("case", { ...d, classId, id: editing?.id }))
+          <>
+            <button
+              className="school-primary school-create-actions"
+              aria-haspopup="dialog"
+              onClick={() => setCaseDialog(true)}
+            >
+              Criar plano de acompanhamento
+            </button>
+            <ActionForm
+              title={
+                editing?.id
+                  ? "Editar acompanhamento"
+                  : "Criar plano de acompanhamento"
+              }
+              open={caseDialog}
+              onDismiss={() => {
+                setCaseDialog(false);
                 setEditing(null);
-            }}
-          >
-            <Field
-              label="Estudante acompanhado"
-              name="studentId"
-              options={opts(pupils)}
-              value={editing?.studentId}
-            />
-            <Field
-              label="Motivo do apoio"
-              name="title"
-              value={editing?.title}
-            />
-            <Field
-              label="Ação combinada"
-              name="action"
-              type="textarea"
-              value={editing?.action}
-            />
-            <Field
-              label="Responsável pela ação"
-              name="owner"
-              options={opts(
-                state.assignees.filter(
-                  (a) =>
-                    a.role !== "professor" ||
-                    selectedClass?.teachers.includes(a.id),
-                ),
-              )}
-              value={editing?.owner}
-            />
-            <Field
-              label="Data de revisão"
-              name="due"
-              type="date"
-              value={editing?.due || nowDate()}
-            />
-            <Field
-              label="Situação do acompanhamento"
-              name="state"
-              options={["Aberto", "Em acompanhamento", "Concluído"]}
-              value={editing?.state || "Aberto"}
-            />
-            <Field
-              label="Retorno e evidências"
-              name="result"
-              type="textarea"
-              value={editing?.result}
-              optional
-            />
-          </Form>
+              }}
+              key={JSON.stringify([classId, editing?.id, editing?.studentId])}
+              onSubmit={(d) => send("case", { ...d, classId, id: editing?.id })}
+            >
+              <Field
+                label="Estudante acompanhado"
+                name="studentId"
+                options={opts(pupils)}
+                value={editing?.studentId}
+              />
+              <Field
+                label="Motivo do apoio"
+                name="title"
+                value={editing?.title}
+              />
+              <Field
+                label="Ação combinada"
+                name="action"
+                type="textarea"
+                value={editing?.action}
+              />
+              <Field
+                label="Responsável pela ação"
+                name="owner"
+                options={opts(
+                  state.assignees.filter(
+                    (a) =>
+                      a.role !== "professor" ||
+                      selectedClass?.teachers.includes(a.id),
+                  ),
+                )}
+                value={editing?.owner}
+              />
+              <Field
+                label="Data de revisão"
+                name="due"
+                type="date"
+                value={editing?.due || nowDate()}
+              />
+              <Field
+                label="Situação do acompanhamento"
+                name="state"
+                options={["Aberto", "Em acompanhamento", "Concluído"]}
+                value={editing?.state || "Aberto"}
+              />
+              <Field
+                label="Retorno e evidências"
+                name="result"
+                type="textarea"
+                value={editing?.result}
+                optional
+              />
+            </ActionForm>
+          </>
         )}
       </Panel>
     </>

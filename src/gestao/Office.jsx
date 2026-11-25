@@ -1,6 +1,8 @@
 import { BookOpen, GraduationCap, School, Users } from "lucide-react";
-import React, { useState } from "react";
+import React, { useRef, useState } from "react";
 import {
+  ActionDialog,
+  ActionForm,
   Form,
   Field,
   Panel,
@@ -36,6 +38,31 @@ export function Accounts({ state, send, user, demo }) {
   return (
     <>
       <Panel title="Contas da escola">
+        <div className="school-create-actions">
+          <ActionForm
+            title="Criar conta"
+            trigger="Criar conta"
+            button="Criar conta"
+            onSubmit={(d) => send("account", d)}
+          >
+            <Field label="Nome" name="name" />
+            <Field label="E-mail" name="email" type="email" />
+            <Field
+              label="Perfil"
+              name="role"
+              options={Object.entries(roles).filter(([r]) => r !== "rede")}
+            />
+            {!demo && (
+              <Field
+                label="Senha inicial"
+                name="password"
+                type="password"
+                minLength={12}
+                autoComplete="new-password"
+              />
+            )}
+          </ActionForm>
+        </div>
         <RecordCards limit={9}>
           {state.accounts.map((a) => (
             <RecordCard
@@ -45,53 +72,42 @@ export function Accounts({ state, send, user, demo }) {
               detail={a.email}
               icon={Users}
               tone={a.active ? "green" : "gold"}
-              action={
-                a.id === user.id || a.role === "rede"
-                  ? undefined
-                  : a.active
-                    ? "Suspender"
-                    : "Reativar"
-              }
-              onOpen={() => send("deactivate", { id: a.id, active: !a.active })}
             >
               <span className="school-pill">
                 {a.active ? "Ativo" : "Suspenso"}
               </span>
+              {a.id !== user.id && a.role !== "rede" && (
+                <ActionForm
+                  trigger={a.active ? "Suspender" : "Reativar"}
+                  triggerClass="school-secondary"
+                  title={a.active ? "Suspender conta" : "Reativar conta"}
+                  button={a.active ? "Suspender conta" : "Reativar conta"}
+                  onSubmit={() =>
+                    send("deactivate", { id: a.id, active: !a.active })
+                  }
+                >
+                  <p>
+                    {a.active ? "Suspender" : "Reativar"} o acesso de {a.name}?
+                  </p>
+                </ActionForm>
+              )}
             </RecordCard>
           ))}
         </RecordCards>
-      </Panel>
-      <Panel title="Criar conta">
-        <Form onSubmit={(d) => send("account", d)}>
-          <Field label="Nome" name="name" />
-          <Field label="E-mail" name="email" type="email" />
-          <Field
-            label="Perfil"
-            name="role"
-            options={Object.entries(roles).filter(([r]) => r !== "rede")}
-          />
-          {!demo && (
-            <Field
-              label="Senha inicial"
-              name="password"
-              type="password"
-              minLength={12}
-              autoComplete="new-password"
-            />
-          )}
-        </Form>
       </Panel>
     </>
   );
 }
 export function Enrollment({ state, send }) {
   const [editing, setEditing] = useState(null),
+    [studentDialog, setStudentDialog] = useState(false),
     [movement, setMovement] = useState(null),
     [movementStudent, setMovementStudent] = useState(""),
     [document, setDocument] = useState(null),
     [preview, setPreview] = useState([]),
     [csvError, setCsvError] = useState(""),
     [filter, setFilter] = useState("");
+  const csvRead = useRef(0);
   const visible = state.students.filter((x) =>
     `${x.name} ${x.registration}`
       .toLocaleLowerCase("pt-BR")
@@ -100,19 +116,57 @@ export function Enrollment({ state, send }) {
   const pupil = state.students.find((x) => x.id === document);
   const current = state.enrollments.filter((x) => !x.end);
   async function read(file) {
+    const reading = ++csvRead.current;
     setCsvError("");
     setPreview([]);
     if (!file) return;
     try {
       if (file.size > 300_000) throw Error("Escolha um CSV de até 300 KB.");
-      setPreview(parseCsv(await file.text()));
+      const rows = parseCsv(await file.text());
+      if (reading === csvRead.current) setPreview(rows);
     } catch (error) {
-      setCsvError(error.message);
+      if (reading === csvRead.current) setCsvError(error.message);
     }
   }
   return (
     <>
       <Panel title="Estudantes e vínculos">
+        <div className="school-actions school-create-actions">
+          <button
+            className="school-primary"
+            aria-haspopup="dialog"
+            onClick={() => {
+              setEditing(null);
+              setStudentDialog(true);
+            }}
+          >
+            Cadastrar estudante
+          </button>
+          <ActionForm
+            title="Efetivar ou renovar matrícula"
+            trigger="Efetivar ou renovar matrícula"
+            triggerClass="school-secondary"
+            button="Efetivar matrícula"
+            onSubmit={(d) => send("enroll", d)}
+          >
+            <Field
+              label="Estudante"
+              name="studentId"
+              options={opts(state.students)}
+            />
+            <Field
+              label="Turma de destino"
+              name="classId"
+              options={opts(state.classes)}
+            />
+            <Field
+              label="Início da matrícula"
+              name="start"
+              type="date"
+              value={nowDate()}
+            />
+          </ActionForm>
+        </div>
         <label className="school-filter">
           Buscar estudante
           <input
@@ -142,7 +196,15 @@ export function Enrollment({ state, send }) {
                 icon={GraduationCap}
               >
                 <div className="school-actions">
-                  <button onClick={() => setEditing(s)}>Editar vínculos</button>
+                  <button
+                    aria-haspopup="dialog"
+                    onClick={() => {
+                      setEditing(s);
+                      setStudentDialog(true);
+                    }}
+                  >
+                    Editar vínculos
+                  </button>
                   <button onClick={() => setDocument(s.id)}>Documentos</button>
                   <button
                     onClick={() => {
@@ -209,93 +271,54 @@ export function Enrollment({ state, send }) {
           </button>
         </Panel>
       )}
-      <div className="school-grid">
-        <Panel
-          title={
-            editing ? "Editar estudante e vínculos" : "Cadastrar estudante"
-          }
-        >
-          <Form
-            key={editing?.id || "new"}
-            onSubmit={async (d, f) => {
-              if (
-                await send("student", {
-                  ...d,
-                  id: editing?.id,
-                  guardians: f.getAll("guardians"),
-                })
-              )
-                setEditing(null);
-            }}
-          >
-            <Field
-              label="Nome do estudante"
-              name="name"
-              value={editing?.name}
-            />
-            <Field
-              label="Número de matrícula"
-              name="registration"
-              value={editing?.registration}
-            />
-            <Field
-              label="Identificador Inep"
-              name="inep"
-              value={editing?.inep}
-              optional
-            />
-            <Field
-              label="Conta do aluno"
-              name="account"
-              options={opts(
-                state.accounts.filter((a) => a.role === "aluno" && a.active),
-              )}
-              value={editing?.account || ""}
-              optional
-            />
-            <Field
-              label="Responsáveis vinculados"
-              name="guardians"
-              options={opts(
-                state.accounts.filter(
-                  (a) => a.role === "responsavel" && a.active,
-                ),
-              )}
-              value={editing?.guardians || []}
-              multiple
-              optional
-            />
-          </Form>
-          {editing && (
-            <button
-              className="school-secondary"
-              onClick={() => setEditing(null)}
-            >
-              Cancelar edição
-            </button>
+      <ActionForm
+        open={studentDialog}
+        onDismiss={() => {
+          setStudentDialog(false);
+          setEditing(null);
+        }}
+        title={editing ? "Editar estudante e vínculos" : "Cadastrar estudante"}
+        key={editing?.id || "new"}
+        onSubmit={(d, f) =>
+          send("student", {
+            ...d,
+            id: editing?.id,
+            guardians: f.getAll("guardians"),
+          })
+        }
+      >
+        <Field label="Nome do estudante" name="name" value={editing?.name} />
+        <Field
+          label="Número de matrícula"
+          name="registration"
+          value={editing?.registration}
+        />
+        <Field
+          label="Identificador Inep"
+          name="inep"
+          value={editing?.inep}
+          optional
+        />
+        <Field
+          label="Conta do aluno"
+          name="account"
+          options={opts(
+            state.accounts.filter((a) => a.role === "aluno" && a.active),
           )}
-        </Panel>
-        <Panel title="Efetivar ou renovar matrícula">
-          <Form button="Efetivar matrícula" onSubmit={(d) => send("enroll", d)}>
-            <Field
-              label="Estudante"
-              name="studentId"
-              options={opts(state.students)}
-            />
-            <Field
-              label="Turma de destino"
-              name="classId"
-              options={opts(state.classes)}
-            />
-            <Field
-              label="Início da matrícula"
-              name="start"
-              type="date"
-              value={nowDate()}
-            />
-          </Form>
-        </Panel>
-      </div>
+          value={editing?.account || ""}
+          optional
+        />
+        <Field
+          label="Responsáveis vinculados"
+          name="guardians"
+          options={opts(
+            state.accounts.filter((a) => a.role === "responsavel" && a.active),
+          )}
+          value={editing?.guardians || []}
+          multiple
+          optional
+        />
+      </ActionForm>
       <Panel title="Movimentação e situação final">
         <div id="situacao-matricula">
           <label className="school-filter">
@@ -337,127 +360,140 @@ export function Enrollment({ state, send }) {
               />
             ))}
         </RecordCards>
-        {movement && (
-          <div className="school-grid">
-            <Form
-              title={`Movimentar ${nameOf(state.students, movement.studentId)}`}
-              button="Registrar movimentação"
-              onSubmit={async (d) => {
-                if (await send("move", { ...d, id: movement.id }))
-                  setMovement(null);
-              }}
-            >
-              <Field
-                label="Data da movimentação"
-                name="day"
-                type="date"
-                value={nowDate()}
-              />
-              <Field
-                label="Motivo"
-                name="result"
-                options={[
-                  "Transferido",
-                  "Mudança de turma",
-                  "Deixou de frequentar",
-                  "Falecido",
-                  "Cancelado",
-                ]}
-              />
-              <Field
-                label="Nova turma para mudança interna"
-                name="to"
-                options={opts(
-                  state.classes.filter((c) => c.id !== movement.classId),
-                )}
-                optional
-              />
-            </Form>
-            <Form
-              title="Resultado final"
-              button="Registrar resultado"
-              onSubmit={async (d) => {
-                if (await send("result", { ...d, id: movement.id }))
-                  setMovement(null);
-              }}
-            >
-              <Field
-                label="Resultado"
-                name="result"
-                options={[
-                  "Aprovado",
-                  "Reprovado",
-                  "Em andamento",
-                  "Sem movimentação",
-                ]}
-              />
-            </Form>
-          </div>
-        )}
-      </Panel>
-      <Panel title="Importar estudantes">
-        <button
-          className="school-secondary"
-          onClick={() =>
-            download(
-              "modelo-estudantes.csv",
-              ["nome", "matricula", "inep"],
-              [["Luiza Lima", "2026001", ""]],
-            )
-          }
+        <ActionDialog
+          open={Boolean(movement)}
+          onDismiss={() => setMovement(null)}
+          title={`Registrar situação de ${nameOf(state.students, movement?.studentId)}`}
         >
-          Baixar modelo CSV
-        </button>
-        <label className="school-filter">
-          Arquivo CSV
-          <input
-            type="file"
-            accept=".csv,text/csv"
-            onChange={(e) => read(e.target.files[0])}
-          />
-        </label>
-        {csvError && <p role="alert">{csvError}</p>}
-        {preview.length > 0 && (
-          <>
-            <Table
-              columns={["Nome", "Matrícula", "Inep"]}
-              rows={preview.map((x, i) => [i, x.name, x.registration, x.inep])}
+          {movement && (
+            <div className="school-grid">
+              <Form
+                title={`Movimentar ${nameOf(state.students, movement.studentId)}`}
+                button="Registrar movimentação"
+                onSubmit={(d) => send("move", { ...d, id: movement.id })}
+              >
+                <Field
+                  label="Data da movimentação"
+                  name="day"
+                  type="date"
+                  value={nowDate()}
+                />
+                <Field
+                  label="Motivo"
+                  name="result"
+                  options={[
+                    "Transferido",
+                    "Mudança de turma",
+                    "Deixou de frequentar",
+                    "Falecido",
+                    "Cancelado",
+                  ]}
+                />
+                <Field
+                  label="Nova turma para mudança interna"
+                  name="to"
+                  options={opts(
+                    state.classes.filter((c) => c.id !== movement.classId),
+                  )}
+                  optional
+                />
+              </Form>
+              <Form
+                title="Resultado final"
+                button="Registrar resultado"
+                onSubmit={(d) => send("result", { ...d, id: movement.id })}
+              >
+                <Field
+                  label="Resultado"
+                  name="result"
+                  options={[
+                    "Aprovado",
+                    "Reprovado",
+                    "Em andamento",
+                    "Sem movimentação",
+                  ]}
+                />
+              </Form>
+            </div>
+          )}
+        </ActionDialog>
+      </Panel>
+      <Panel title="Importação por planilha">
+        <ActionDialog
+          title="Importar estudantes"
+          trigger="Importar estudantes"
+          onDismiss={() => {
+            csvRead.current += 1;
+            setPreview([]);
+            setCsvError("");
+          }}
+        >
+          <button
+            className="school-secondary"
+            onClick={() =>
+              download(
+                "modelo-estudantes.csv",
+                ["nome", "matricula", "inep"],
+                [["Luiza Lima", "2026001", ""]],
+              )
+            }
+          >
+            Baixar modelo CSV
+          </button>
+          <label className="school-filter">
+            Arquivo CSV
+            <input
+              type="file"
+              accept=".csv,text/csv"
+              onChange={(e) => read(e.target.files[0])}
             />
-            <Form
-              button={`Importar ${preview.length} estudante(s)`}
-              onSubmit={async (d) => {
-                if (
-                  await send("import", {
+          </label>
+          {csvError && <p role="alert">{csvError}</p>}
+          {preview.length > 0 && (
+            <>
+              <Table
+                columns={["Nome", "Matrícula", "Inep"]}
+                rows={preview.map((x, i) => [
+                  i,
+                  x.name,
+                  x.registration,
+                  x.inep,
+                ])}
+              />
+              <Form
+                button={`Importar ${preview.length} estudante(s)`}
+                onSubmit={(d) =>
+                  send("import", {
                     students: preview.map((x) => ({
                       ...x,
                       classId: d.classId,
                       start: d.start,
                     })),
                   })
-                )
-                  setPreview([]);
-              }}
-            >
-              <Field
-                label="Enturmar estudantes em"
-                name="classId"
-                options={opts(state.classes)}
-                optional
-              />
-              <Field
-                label="Início das matrículas"
-                name="start"
-                type="date"
-                value={nowDate()}
-              />
-            </Form>
-          </>
-        )}
+                }
+              >
+                <Field
+                  label="Enturmar estudantes em"
+                  name="classId"
+                  options={opts(state.classes)}
+                  optional
+                />
+                <Field
+                  label="Início das matrículas"
+                  name="start"
+                  type="date"
+                  value={nowDate()}
+                />
+              </Form>
+            </>
+          )}
+        </ActionDialog>
       </Panel>
     </>
   );
 }
 export function Classes({ state, send, office }) {
+  const [classDialog, setClassDialog] = useState(false);
   const [editing, setEditing] = useState(null);
   const [search, setSearch] = useState("");
   const [shift, setShift] = useState("");
@@ -476,6 +512,18 @@ export function Classes({ state, send, office }) {
   return (
     <>
       <Panel title="Turmas e horários">
+        {office && (
+          <button
+            className="school-primary school-create-actions"
+            aria-haspopup="dialog"
+            onClick={() => {
+              setEditing(null);
+              setClassDialog(true);
+            }}
+          >
+            Criar turma
+          </button>
+        )}
         <div className="school-filters">
           <label>
             Buscar por turma ou ano
@@ -525,7 +573,10 @@ export function Classes({ state, send, office }) {
               icon={BookOpen}
               tone={c.shift === "Manhã" ? "blue" : "green"}
               action={office ? "Editar turma" : undefined}
-              onOpen={() => setEditing(c)}
+              onOpen={() => {
+                setEditing(c);
+                setClassDialog(true);
+              }}
             >
               <p className="record-detail school-pre">{c.timetable}</p>
               <p className="record-detail">
@@ -536,81 +587,72 @@ export function Classes({ state, send, office }) {
         </RecordCards>
       </Panel>
       {office && (
-        <Panel title={editing ? "Editar turma" : "Criar turma"}>
-          <Form
-            key={editing?.id || "new"}
-            onSubmit={async (d, f) => {
-              if (
-                await send("class", {
-                  ...d,
-                  id: editing?.id,
-                  teachers: f.getAll("teachers"),
-                })
-              )
-                setEditing(null);
-            }}
-          >
-            <Field label="Nome da turma" name="name" value={editing?.name} />
-            <Field
-              label="Etapa de ensino"
-              name="stage"
-              options={stages}
-              value={editing?.stage}
-              optional={!!editing}
-              disabled={!!editing}
-            />
-            {editing && (
-              <input type="hidden" name="stage" value={editing.stage} />
-            )}
-            <Field
-              label="Componente curricular"
-              name="subject"
-              value={editing?.subject}
-            />
-            <Field
-              label="Ano letivo"
-              name="year"
-              type="number"
-              min={2000}
-              max={2100}
-              value={editing?.year || state.policy.year}
-              readOnly={!!editing}
-            />
-            <Field
-              label="Turno"
-              name="shift"
-              options={["Manhã", "Tarde", "Noite", "Integral"]}
-              value={editing?.shift}
-            />
-            <Field
-              label="Professor(es) da turma"
-              name="teachers"
-              options={opts(
-                state.accounts.filter(
-                  (a) => a.role === "professor" && a.active,
-                ),
-              )}
-              value={editing?.teachers || []}
-              multiple
-            />
-            <Field
-              label="Horários das aulas"
-              name="timetable"
-              type="textarea"
-              value={editing?.timetable}
-              placeholder="Segunda, 08:00–08:50"
-              optional
-            />
-          </Form>
+        <ActionForm
+          title={editing ? "Editar turma" : "Criar turma"}
+          open={classDialog}
+          onDismiss={() => {
+            setClassDialog(false);
+            setEditing(null);
+          }}
+          key={editing?.id || "new"}
+          onSubmit={(d, f) =>
+            send("class", {
+              ...d,
+              id: editing?.id,
+              teachers: f.getAll("teachers"),
+            })
+          }
+        >
+          <Field label="Nome da turma" name="name" value={editing?.name} />
+          <Field
+            label="Etapa de ensino"
+            name="stage"
+            options={stages}
+            value={editing?.stage}
+            optional={!!editing}
+            disabled={!!editing}
+          />
           {editing && (
-            <button
-              className="school-secondary"
-              onClick={() => setEditing(null)}
-            >
-              Cancelar edição
-            </button>
+            <input type="hidden" name="stage" value={editing.stage} />
           )}
-        </Panel>
+          <Field
+            label="Componente curricular"
+            name="subject"
+            value={editing?.subject}
+          />
+          <Field
+            label="Ano letivo"
+            name="year"
+            type="number"
+            min={2000}
+            max={2100}
+            value={editing?.year || state.policy.year}
+            readOnly={!!editing}
+          />
+          <Field
+            label="Turno"
+            name="shift"
+            options={["Manhã", "Tarde", "Noite", "Integral"]}
+            value={editing?.shift}
+          />
+          <Field
+            label="Professor(es) da turma"
+            name="teachers"
+            options={opts(
+              state.accounts.filter((a) => a.role === "professor" && a.active),
+            )}
+            value={editing?.teachers || []}
+            multiple
+          />
+          <Field
+            label="Horários das aulas"
+            name="timetable"
+            type="textarea"
+            value={editing?.timetable}
+            placeholder="Segunda, 08:00–08:50"
+            optional
+          />
+        </ActionForm>
       )}
     </>
   );
@@ -650,48 +692,54 @@ export function Reports({ state }) {
           identificador Inep · {census.filter((r) => !r[8]).length} sem situação
           final registrada.
         </p>
-        <div className="school-actions">
-          <button
-            onClick={() =>
-              download(
-                "conferencia-matricula-inicial.csv",
-                [
-                  "inep",
-                  "matricula",
-                  "estudante",
-                  "turma",
-                  "etapa",
-                  "ano",
-                  "inicio",
-                ],
-                census.map((r) => r.slice(0, 7)),
-              )
-            }
-          >
-            Exportar matrícula inicial
-          </button>
-          <button
-            onClick={() =>
-              download(
-                "conferencia-situacao-aluno.csv",
-                [
-                  "inep",
-                  "matricula",
-                  "estudante",
-                  "turma",
-                  "etapa",
-                  "ano",
-                  "inicio",
-                  "encerramento",
-                  "situacao",
-                ],
-                census,
-              )
-            }
-          >
-            Exportar situação do aluno
-          </button>
-        </div>
+        <ActionDialog
+          title="Exportar dados do Censo"
+          trigger="Exportar dados do Censo"
+          triggerClass="school-secondary"
+        >
+          <div className="school-actions">
+            <button
+              onClick={() =>
+                download(
+                  "conferencia-matricula-inicial.csv",
+                  [
+                    "inep",
+                    "matricula",
+                    "estudante",
+                    "turma",
+                    "etapa",
+                    "ano",
+                    "inicio",
+                  ],
+                  census.map((r) => r.slice(0, 7)),
+                )
+              }
+            >
+              Exportar matrícula inicial
+            </button>
+            <button
+              onClick={() =>
+                download(
+                  "conferencia-situacao-aluno.csv",
+                  [
+                    "inep",
+                    "matricula",
+                    "estudante",
+                    "turma",
+                    "etapa",
+                    "ano",
+                    "inicio",
+                    "encerramento",
+                    "situacao",
+                  ],
+                  census,
+                )
+              }
+            >
+              Exportar situação do aluno
+            </button>
+          </div>
+        </ActionDialog>
         <p className="school-caption">
           Os CSVs são para conferência e integração com o sistema da rede. A
           transmissão é feita no Educacenso conforme o leiaute da coleta.

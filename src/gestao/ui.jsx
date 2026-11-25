@@ -1,4 +1,151 @@
-import React from "react";
+import React, {
+  createContext,
+  useContext,
+  useEffect,
+  useId,
+  useRef,
+  useState,
+} from "react";
+import { X } from "lucide-react";
+
+export const ActionFeedback = createContext(null);
+const ActionSubmission = createContext(null);
+
+export function ActionDialog({
+  title,
+  trigger,
+  triggerClass = "school-primary",
+  open,
+  onDismiss,
+  children,
+}) {
+  const [visible, setVisible] = useState(false);
+  const [pending, setPending] = useState(false);
+  const submitting = useRef(false);
+  const ref = useRef(null);
+  const heading = useRef(null);
+  const errorRegion = useRef(null);
+  const id = useId();
+  const feedback = useContext(ActionFeedback);
+  const active = open ?? visible;
+  const clearError = feedback?.clearError;
+
+  useEffect(() => {
+    const dialog = ref.current;
+    if (!active || !dialog) return;
+    clearError?.();
+    const opener = document.activeElement;
+    dialog.showModal();
+    heading.current.focus();
+    return () => {
+      dialog.close();
+      if (opener instanceof HTMLElement && opener.isConnected)
+        opener.focus({ preventScroll: true });
+    };
+  }, [active, clearError]);
+
+  useEffect(() => {
+    if (active && feedback?.error && !pending) errorRegion.current?.focus();
+  }, [active, feedback?.error, pending]);
+
+  function dismiss() {
+    clearError?.();
+    setVisible(false);
+    onDismiss?.();
+  }
+
+  async function submit(action) {
+    if (submitting.current) return;
+    submitting.current = true;
+    setPending(true);
+    try {
+      if ((await action()) === true) dismiss();
+    } finally {
+      submitting.current = false;
+      setPending(false);
+    }
+  }
+
+  return (
+    <>
+      {trigger && (
+        <button
+          type="button"
+          className={triggerClass}
+          aria-haspopup="dialog"
+          onClick={() => setVisible(true)}
+        >
+          {trigger}
+        </button>
+      )}
+      <dialog
+        ref={ref}
+        className="school-dialog school-no-print"
+        aria-labelledby={id}
+        aria-busy={pending || undefined}
+        onCancel={(event) => {
+          event.preventDefault();
+          if (!submitting.current) dismiss();
+        }}
+      >
+        {active && (
+          <>
+            <header className="school-dialog-header">
+              <h2 id={id} tabIndex={-1} ref={heading}>
+                {title}
+              </h2>
+              <button
+                type="button"
+                className="school-dialog-close"
+                aria-label="Fechar diálogo"
+                onClick={dismiss}
+                disabled={pending}
+              >
+                <X size={20} aria-hidden="true" />
+              </button>
+            </header>
+            <div className="school-dialog-body">
+              {feedback?.error && (
+                <div
+                  ref={errorRegion}
+                  role="alert"
+                  tabIndex={-1}
+                  className="school-error"
+                >
+                  {feedback.error}
+                </div>
+              )}
+              <ActionSubmission.Provider value={{ submit, pending, dismiss }}>
+                {children}
+              </ActionSubmission.Provider>
+            </div>
+          </>
+        )}
+      </dialog>
+    </>
+  );
+}
+
+export function ActionForm({
+  title,
+  trigger,
+  triggerClass,
+  open,
+  onDismiss,
+  ...form
+}) {
+  return (
+    <ActionDialog
+      title={title}
+      trigger={trigger}
+      triggerClass={triggerClass}
+      open={open}
+      onDismiss={onDismiss}
+    >
+      <Form {...form} />
+    </ActionDialog>
+  );
+}
 
 export const nowDate = () =>
   new Intl.DateTimeFormat("en-CA", { timeZone: "America/Sao_Paulo" }).format(
@@ -63,19 +210,56 @@ export function Form({
   children,
   button = "Salvar",
   className = "",
+  submitActions,
 }) {
+  const action = useContext(ActionSubmission);
   return (
     <form
       className={"school-form " + className}
       onSubmit={(e) => {
         e.preventDefault();
-        const form = new FormData(e.currentTarget);
-        onSubmit(Object.fromEntries(form), form);
+        const form = new FormData(e.currentTarget, e.nativeEvent.submitter);
+        const submit = () => onSubmit(Object.fromEntries(form), form);
+        if (action) action.submit(submit);
+        else submit();
       }}
     >
       {title && <h2>{title}</h2>}
-      <div className="school-fields">{children}</div>
-      <button className="school-primary">{button}</button>
+      {action ? (
+        <>
+          <fieldset className="school-fields" disabled={action.pending}>
+            {children}
+          </fieldset>
+          <div className="school-dialog-actions">
+            <button
+              type="button"
+              className="school-secondary"
+              onClick={action.dismiss}
+              disabled={action.pending}
+            >
+              Cancelar
+            </button>
+            {(submitActions || [{ label: button }]).map(
+              ({ label, value, secondary }) => (
+                <button
+                  key={label}
+                  className={secondary ? "school-secondary" : "school-primary"}
+                  name={value === undefined ? undefined : "action"}
+                  value={value}
+                  disabled={action.pending}
+                >
+                  {label}
+                </button>
+              ),
+            )}
+          </div>
+        </>
+      ) : (
+        <>
+          <div className="school-fields">{children}</div>
+          <button className="school-primary">{button}</button>
+        </>
+      )}
     </form>
   );
 }

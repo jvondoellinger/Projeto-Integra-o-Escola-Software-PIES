@@ -8,7 +8,7 @@ import {
 } from "lucide-react";
 import MonthCalendar, { titleForDay } from "./MonthCalendar.jsx";
 import {
-  Form,
+  ActionForm,
   Field,
   Panel,
   Table,
@@ -40,8 +40,7 @@ export function Calendar({
         : nowDate(),
     ),
     [type, setType] = useState(""),
-    [classId, setClass] = useState(""),
-    [editing, setEditing] = useState(false);
+    [classId, setClass] = useState("");
   const events = [
     ...state.events.map((e) => ({
       ...e,
@@ -156,25 +155,16 @@ export function Calendar({
       </Panel>
       <Panel title={titleForDay(selected)} className="day-agenda">
         {staff && (
-          <button
-            className="school-primary"
-            onClick={() => setEditing(!editing)}
-          >
-            {editing ? "Fechar formulário" : "Adicionar compromisso"}
-          </button>
-        )}
-        {editing && staff && (
-          <Form
-            key={selected}
+          <ActionForm
             title="Novo compromisso"
+            trigger="Adicionar compromisso"
             button="Salvar compromisso"
             onSubmit={async (d) => {
-              if (await send("event", d)) {
-                setEditing(false);
-                pickDay(d.day);
-                setType("");
-                setClass("");
-              }
+              if (!(await send("event", d))) return false;
+              pickDay(d.day);
+              setType("");
+              setClass("");
+              return true;
             }}
           >
             <Field label="Compromisso" name="title" />
@@ -208,7 +198,7 @@ export function Calendar({
               value={classId}
               optional={office}
             />
-          </Form>
+          </ActionForm>
         )}
         <RecordCards empty="Nenhum compromisso para este dia.">
           {dayEvents.map((e) => (
@@ -264,6 +254,25 @@ export function Notices({ state, send, staff, office, initialId }) {
   return (
     <>
       <Panel title="Comunicados da escola">
+        {staff && (
+          <div className="school-create-actions">
+            <ActionForm
+              title="Publicar comunicado"
+              trigger="Publicar comunicado"
+              button="Publicar comunicado"
+              onSubmit={(d) => send("notice", d)}
+            >
+              <Field label="Título do comunicado" name="title" />
+              <Field label="Mensagem" name="body" type="textarea" />
+              <Field
+                label="Turma do comunicado"
+                name="classId"
+                options={opts(state.classes)}
+                optional={office}
+              />
+            </ActionForm>
+          </div>
+        )}
         {state.notices.length === 0 && (
           <p className="school-empty">Ainda não há comunicados.</p>
         )}
@@ -303,23 +312,6 @@ export function Notices({ state, send, staff, office, initialId }) {
           </article>
         ))}
       </Panel>
-      {staff && (
-        <Panel title="Publicar comunicado">
-          <Form
-            button="Publicar comunicado"
-            onSubmit={(d) => send("notice", d)}
-          >
-            <Field label="Título do comunicado" name="title" />
-            <Field label="Mensagem" name="body" type="textarea" />
-            <Field
-              label="Turma do comunicado"
-              name="classId"
-              options={opts(state.classes)}
-              optional={office}
-            />
-          </Form>
-        </Panel>
-      )}
     </>
   );
 }
@@ -549,7 +541,10 @@ export function Family({ state, send, user, initialDay, onStudentFocus }) {
                         </p>
                       ) : user.role === "responsavel" &&
                         presence.status === "Falta" ? (
-                        <Form
+                        <ActionForm
+                          title={`Justificar falta de ${br(l.day)}`}
+                          trigger="Enviar justificativa"
+                          triggerClass="school-secondary"
                           button="Enviar justificativa"
                           onSubmit={(d) =>
                             send("justify", {
@@ -563,7 +558,7 @@ export function Family({ state, send, user, initialDay, onStudentFocus }) {
                             label={`Justificativa de ${br(l.day)}`}
                             name="reason"
                           />
-                        </Form>
+                        </ActionForm>
                       ) : null}
                     </RecordCard>
                   );
@@ -757,21 +752,28 @@ export function Activities({ state, send, initialId }) {
                             : "Marcar como feita"}
                       </button>
                       {!isExam && (
-                        <form
-                          className="school-form"
-                          onSubmit={(e) => {
-                            e.preventDefault();
-                            const text = new FormData(e.currentTarget).get(
-                              "text",
-                            );
-                            const action = e.nativeEvent.submitter.value;
+                        <ActionForm
+                          title={`Responder · ${a.title}`}
+                          trigger={
+                            sub?.text
+                              ? "Continuar resposta"
+                              : "Responder atividade"
+                          }
+                          submitActions={[
+                            {
+                              label: "Salvar rascunho",
+                              value: "rascunho",
+                              secondary: true,
+                            },
+                            { label: "Entregar atividade", value: "entregar" },
+                          ]}
+                          onSubmit={(data) =>
                             send("submission", {
+                              ...data,
                               assessmentId: a.id,
                               studentId: student.id,
-                              text,
-                              action,
-                            });
-                          }}
+                            })
+                          }
                         >
                           <Field
                             label={`Resolução · ${a.title}`}
@@ -781,18 +783,7 @@ export function Activities({ state, send, initialId }) {
                             optional
                             maxLength={5000}
                           />
-                          <div className="school-actions">
-                            <button
-                              className="school-secondary"
-                              value="rascunho"
-                            >
-                              Salvar rascunho
-                            </button>
-                            <button className="school-primary" value="entregar">
-                              Entregar atividade
-                            </button>
-                          </div>
-                        </form>
+                        </ActionForm>
                       )}
                     </>
                   )}
