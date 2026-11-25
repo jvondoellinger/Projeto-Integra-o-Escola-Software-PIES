@@ -409,9 +409,58 @@ export function Enrollment({ state, send }) {
 }
 export function Classes({ state, send, office }) {
   const [editing, setEditing] = useState(null);
+  const [search, setSearch] = useState("");
+  const [shift, setShift] = useState("");
+  const [subject, setSubject] = useState("");
+  const subjects = [...new Set(state.classes.map((c) => c.subject))].sort(
+    (a, b) => a.localeCompare(b, "pt-BR"),
+  );
+  const visible = state.classes.filter(
+    (c) =>
+      (!shift || c.shift === shift) &&
+      (!subject || c.subject === subject) &&
+      `${c.name} ${c.year}`
+        .toLocaleLowerCase("pt-BR")
+        .includes(search.trim().toLocaleLowerCase("pt-BR")),
+  );
   return (
     <>
       <Panel title="Turmas e horários">
+        <div className="school-filters">
+          <label>
+            Buscar por turma ou ano
+            <input
+              type="search"
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+            />
+          </label>
+          <label>
+            Turno da turma
+            <select value={shift} onChange={(e) => setShift(e.target.value)}>
+              <option value="">Todos os turnos</option>
+              {[...new Set(state.classes.map((c) => c.shift))].map((value) => (
+                <option key={value}>{value}</option>
+              ))}
+            </select>
+          </label>
+          <label>
+            Filtrar por disciplina
+            <select
+              value={subject}
+              onChange={(e) => setSubject(e.target.value)}
+            >
+              <option value="">Todas as disciplinas</option>
+              {subjects.map((value) => (
+                <option key={value}>{value}</option>
+              ))}
+            </select>
+          </label>
+        </div>
+        <p className="school-caption" aria-live="polite">
+          {visible.length} de {state.classes.length} registros de turma e
+          disciplina
+        </p>
         <Table
           columns={[
             "Turma",
@@ -421,7 +470,7 @@ export function Classes({ state, send, office }) {
             "Turno e horários",
             "Equipe",
           ]}
-          rows={state.classes.map((c) => [
+          rows={visible.map((c) => [
             c.id,
             c.name,
             c.stage,

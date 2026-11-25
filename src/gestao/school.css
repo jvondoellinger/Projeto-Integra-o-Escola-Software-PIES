@@ -530,3 +530,12 @@ a {
     overflow: visible;
   }
 }
+
+.school-quick-access {
+  padding: 18px 0;
+  margin: 18px 0 10px;
+  border-top: 1px solid #d8e4db;
+}
+.school-quick-access .school-actions {
+  gap: 8px;
+}

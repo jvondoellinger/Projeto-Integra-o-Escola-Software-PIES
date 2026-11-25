@@ -95,7 +95,7 @@ function Brand() {
     </div>
   );
 }
-function Login({ onLogin, error }) {
+function Login({ onLogin, error, profiles }) {
   return (
     <div className="school-login">
       <section className="school-login-brand">
@@ -120,16 +120,41 @@ function Login({ onLogin, error }) {
             name="password"
             type="password"
             autoComplete="current-password"
+            optional={profiles.length > 0}
           />
         </Form>
+        {profiles.length > 0 && (
+          <section
+            aria-labelledby="quick-access"
+            className="school-quick-access"
+          >
+            <h3 id="quick-access">Escolha um perfil</h3>
+            <p className="school-caption">
+              Entre direto ou use o e-mail do perfil com qualquer senha.
+            </p>
+            <div className="school-actions">
+              {profiles.map((profile) => (
+                <button
+                  key={profile.email}
+                  type="button"
+                  onClick={() =>
+                    onLogin({ email: profile.email, password: "" })
+                  }
+                >
+                  {profile.label}
+                </button>
+              ))}
+            </div>
+          </section>
+        )}
         {error && (
           <p className="school-error" role="alert">
             {error}
           </p>
         )}
         <p className="school-caption">
-          Use a conta fornecida pela sua instituição. O PIES usa um cookie
-          essencial para manter o acesso.
+          {!profiles.length && "Use a conta fornecida pela sua instituição. "}O
+          PIES usa um cookie essencial para manter o acesso.
         </p>
       </main>
     </div>
@@ -253,6 +278,7 @@ function Overview({ state, user, open }) {
 function App() {
   const [session, setSession] = useState(null),
     [loading, setLoading] = useState(true),
+    [profiles, setProfiles] = useState([]),
     [message, setMessage] = useState(""),
     [error, setError] = useState(""),
     [page, setPage] = useState(() => location.hash.slice(1) || "inicio"),
@@ -263,6 +289,7 @@ function App() {
     try {
       const result = await request("workspace");
       setSession(result.user ? result : null);
+      if (result.profiles) setProfiles(result.profiles);
       setPending(result.user ? queued(result.user).length : 0);
     } catch (e) {
       if (e.status === 401) setSession(null);
@@ -387,7 +414,8 @@ function App() {
   }
   if (loading)
     return <main className="school-loading">Carregando o PIES…</main>;
-  if (!session) return <Login onLogin={enter} error={error} />;
+  if (!session)
+    return <Login onLogin={enter} error={error} profiles={profiles} />;
   const staff = staffRoles.includes(user.role),
     office = adminRoles.includes(user.role);
   const allowed = navigation.filter((n) => !n[3] || n[3].includes(user.role));

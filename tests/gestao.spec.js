@@ -177,6 +177,10 @@ test("professor registra chamada desconectado, sincroniza, corrige e família re
 test("API isola escolas e bloqueia alterações de professor em período publicado", async ({
   request,
 }) => {
+  const invalid = await request.post(url + "/api/login", {
+    data: { email: "professor@ipe.example", password: "qualquer senha" },
+  });
+  expect(invalid.status()).toBe(401);
   await request.post(url + "/api/login", {
     data: { email: "professor@ipe.example", password },
   });

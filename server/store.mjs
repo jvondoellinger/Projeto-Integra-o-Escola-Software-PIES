@@ -83,7 +83,7 @@ export function createAccount(school, { email, name, role, password }) {
   ).run(id, school, email, name, role, passwordHash(password));
   return id;
 }
-export function login(email, password) {
+export function login(email, password, options = {}) {
   insist(
     typeof email === "string" &&
       typeof password === "string" &&
@@ -97,12 +97,14 @@ export function login(email, password) {
     .get(email.trim().toLowerCase());
   const reference =
     account?.password || `00000000000000000000000000000000:${"0".repeat(128)}`;
-  const actual = passwordHash(password, reference.split(":")[0]);
-  insist(
-    timingSafeEqual(Buffer.from(actual), Buffer.from(reference)) && account,
-    "Credenciais inválidas.",
-    401,
-  );
+  const passwordAccepted =
+    options.skipPassword === true && account
+      ? true
+      : timingSafeEqual(
+          Buffer.from(passwordHash(password, reference.split(":")[0])),
+          Buffer.from(reference),
+        );
+  insist(account && passwordAccepted, "Credenciais inválidas.", 401);
   const token = randomBytes(32).toString("base64url");
   db.prepare("DELETE FROM sessions WHERE expires<=?").run(Date.now());
   db.prepare("INSERT INTO sessions VALUES (?,?,?)").run(

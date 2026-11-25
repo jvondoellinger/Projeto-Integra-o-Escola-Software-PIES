@@ -11,7 +11,8 @@
     "format": "prettier --write src tests playwright.config.js package.json index.html",
     "start": "node server/http.mjs",
     "provision": "node server/provision.mjs",
-    "sample": "node server/sample.mjs"
+    "sample": "node server/sample.mjs",
+    "start:preview": "node server/preview.mjs"
   },
   "dependencies": {
     "@fontsource/dm-sans": "^5.3.0",
