@@ -79,16 +79,14 @@ export function studentMetrics(student, grades, period = 3) {
     ),
   };
 }
-export function monthlySeries(grades, studentIds) {
+export function monthlySeries(grades, studentIds, year = schoolYear) {
   return months.map((_, i) =>
     mean(
       grades
         .filter(
           (g) =>
             studentIds.includes(g.studentId) &&
-            g.date.startsWith(
-              `${schoolYear}-${String(i + 1).padStart(2, "0")}`,
-            ),
+            g.date.startsWith(`${year}-${String(i + 1).padStart(2, "0")}`),
         )
         .map((g) => g.score),
     ),

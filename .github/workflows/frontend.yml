@@ -1,7 +1,7 @@
 name: Frontend
 on:
   push:
-    branches: [main, feat/portal-aluno-e-alertas]
+    branches: [main, feat/operacao-escolar-integrada]
   pull_request:
 permissions:
   contents: read

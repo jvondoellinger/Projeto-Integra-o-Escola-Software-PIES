@@ -1,6 +1,10 @@
 # Sistema Inteligente de Análise de Desempenho Escolar
 
-## Executar o frontend
+## Executar a gestão escolar
+
+Use Node.js 22 ou superior. Execute `npm ci`, `npm run build` e `npm start`. Consulte [Gestão escolar](docs/GESTAO.md) para provisionar a primeira escola, carregar um ambiente de avaliação e configurar os avisos por e-mail.
+
+## Executar o frontend anterior
 
 Requer Node.js 20.19+ ou 22.12+.
 
