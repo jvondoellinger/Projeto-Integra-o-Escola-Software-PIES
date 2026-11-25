@@ -4,6 +4,8 @@ A versão pública carrega a interface no Cloudflare Pages. Perfis, turmas, alun
 
 O projeto PIES está na região de São Paulo. As migrations em supabase/migrations definem o esquema e a carga de 505 estudantes distribuídos em duas unidades. A carga usa generate_series, JOINs e funções de janela para gerar matrículas, chamadas, notas, atividades e boletins consistentes. O módulo SQLite continua disponível para os testes locais da aplicação.
 
+A carga preserva os cinco nomes fornecidos para o projeto e combina 500 prenomes e 500 sobrenomes distintos a partir de tabelas agregadas do censo dos Estados Unidos. A atualização preserva as matrículas e os vínculos acadêmicos. [Dados de nomes do Censo de 2020](https://www.census.gov/topics/population/genealogy/data/2020_names.html)
+
 ## Conceitos no fluxo
 
 | Conceito | Onde entra no PIES |
