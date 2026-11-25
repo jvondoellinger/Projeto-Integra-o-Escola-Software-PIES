@@ -3,7 +3,10 @@ import {
   CalendarDays,
   ClipboardCheck,
   HeartHandshake,
+  Plus,
+  Pencil,
 } from "lucide-react";
+import ReportDownload, { reportGroup } from "./ReportDownload.jsx";
 import MonthCalendar, { titleForDay } from "./MonthCalendar.jsx";
 import PerformanceChart from "../PerformanceChart.jsx";
 import React, { useState, useRef } from "react";
@@ -344,17 +347,21 @@ export function Evaluations({ state, send, initialId }) {
           Recuperação
         </label>
       </ActionForm>
-      <Panel title="Avaliações planejadas">
-        <button
-          className="school-primary school-create-actions"
-          aria-haspopup="dialog"
-          onClick={() => {
-            setEditing(null);
-            setAssessmentDialog(true);
-          }}
-        >
-          Planejar avaliação
-        </button>
+      <Panel
+        title="Avaliações planejadas"
+        actions={
+          <button
+            className="school-primary"
+            aria-haspopup="dialog"
+            onClick={() => {
+              setEditing(null);
+              setAssessmentDialog(true);
+            }}
+          >
+            <Plus size={16} aria-hidden="true" /> Planejar avaliação
+          </button>
+        }
+      >
         <div className="school-filters">
           <label>
             Turma das avaliações
@@ -422,7 +429,7 @@ export function Evaluations({ state, send, initialId }) {
                       setAssessmentDialog(true);
                     }}
                   >
-                    Editar avaliação
+                    <Pencil size={15} aria-hidden="true" /> Editar avaliação
                   </button>
                   <ActionForm
                     title={
@@ -550,23 +557,49 @@ export function Closing({ state, send, office }) {
       : state.previews.find(
           (x) => x.classId === classId && x.periodId === periodId,
         )?.rows) || [];
+  const closures = new Map(
+    state.closures.map((item) => [`${item.classId}:${item.periodId}`, item]),
+  );
+  const periods = state.periods.filter(
+    (period) => !c || period.year === c.year,
+  );
+  const classrooms = state.classes
+    .filter((classroom) => !classId || classroom.id === classId)
+    .map((classroom) => ({
+      classroom,
+      periods: periods.filter(
+        (period) =>
+          period.year === classroom.year &&
+          (!periodId || period.id === periodId),
+      ),
+    }))
+    .filter((entry) => entry.periods.length);
+
   return (
     <>
-      <Panel title="Revisar e fechar período">
+      <Panel
+        title="Turmas e períodos"
+        actions={office && <ClosingSettings state={state} send={send} />}
+      >
         <div className="school-filters">
           <label>
             Turma do boletim
             <select
               value={classId}
-              onChange={(e) => {
-                setClass(e.target.value);
-                setPeriod("");
+              onChange={(event) => {
+                const next = event.target.value;
+                setClass(next);
+                const selectedClass = state.classes.find(
+                  (item) => item.id === next,
+                );
+                if (selectedClass && p?.year !== selectedClass.year)
+                  setPeriod("");
               }}
             >
-              <option value="">Selecione</option>
-              {state.classes.map((x) => (
-                <option key={x.id} value={x.id}>
-                  {x.name}
+              <option value="">Todas as turmas</option>
+              {state.classes.map((item) => (
+                <option key={item.id} value={item.id}>
+                  {item.name}
                 </option>
               ))}
             </select>
@@ -575,24 +608,144 @@ export function Closing({ state, send, office }) {
             Período do boletim
             <select
               value={periodId}
-              onChange={(e) => setPeriod(e.target.value)}
+              onChange={(event) => setPeriod(event.target.value)}
             >
-              <option value="">Selecione</option>
-              {state.periods
-                .filter((p) => p.year === c?.year)
-                .map((x) => (
-                  <option key={x.id} value={x.id}>
-                    {x.name}
-                  </option>
-                ))}
+              <option value="">Todos os períodos</option>
+              {periods.map((period) => (
+                <option key={period.id} value={period.id}>
+                  {period.name}
+                </option>
+              ))}
             </select>
           </label>
+          {(classId || periodId) && (
+            <button
+              type="button"
+              className="school-secondary"
+              onClick={() => {
+                setClass("");
+                setPeriod("");
+              }}
+            >
+              Limpar filtros
+            </button>
+          )}
         </div>
-        {c && p && (
-          <>
-            <p className="school-caption">
-              {br(p.start)} a {br(p.end)} · {closure?.state || "Em lançamento"}
-            </p>
+        {!(c && p) && (
+          <RecordCards
+            key={`${classId}:${periodId}`}
+            limit={9}
+            empty="Nenhuma turma neste período."
+          >
+            {classrooms.map(({ classroom, periods: classPeriods }) => (
+              <RecordCard
+                key={classroom.id}
+                title={classroom.name}
+                eyebrow={String(classroom.year)}
+                icon={ClipboardCheck}
+                tone="blue"
+              >
+                <div className="school-closing-periods">
+                  {classPeriods.map((period) => {
+                    const status =
+                      closures.get(`${classroom.id}:${period.id}`)?.state ||
+                      "Em lançamento";
+                    return (
+                      <button
+                        type="button"
+                        key={period.id}
+                        aria-label={`${classroom.name}, ${period.name} · ${status}`}
+                        onClick={() => {
+                          setClass(classroom.id);
+                          setPeriod(period.id);
+                          requestAnimationFrame(() => {
+                            document
+                              .getElementById("detalhe-fechamento")
+                              ?.focus();
+                          });
+                        }}
+                      >
+                        <span>{period.name}</span>
+                        <small data-status={status}>{status}</small>
+                      </button>
+                    );
+                  })}
+                </div>
+              </RecordCard>
+            ))}
+          </RecordCards>
+        )}
+      </Panel>
+      {c && p && (
+        <div id="detalhe-fechamento" tabIndex={-1}>
+          <Panel
+            title={`${c.name} · ${p.name}`}
+            subtitle={`${br(p.start)} a ${br(p.end)} · ${closure?.state || "Em lançamento"}`}
+            actions={
+              office && (
+                <>
+                  {(!closure || closure.state === "Reaberto") && (
+                    <ActionForm
+                      title="Fechar período"
+                      trigger="Fechar período"
+                      button="Fechar período"
+                      onSubmit={() =>
+                        send("closure", { classId, periodId, state: "Fechado" })
+                      }
+                    >
+                      <p>
+                        Revise as notas e a frequência antes de fechar este
+                        período.
+                      </p>
+                    </ActionForm>
+                  )}
+                  {closure?.state === "Fechado" && (
+                    <ActionForm
+                      title="Publicar boletins"
+                      trigger="Publicar boletins"
+                      button="Publicar boletins"
+                      onSubmit={() =>
+                        send("closure", {
+                          classId,
+                          periodId,
+                          state: "Publicado",
+                        })
+                      }
+                    >
+                      <p>
+                        Os boletins deste período ficarão disponíveis para os
+                        estudantes e seus responsáveis.
+                      </p>
+                    </ActionForm>
+                  )}
+                  {closure && closure.state !== "Reaberto" && (
+                    <ActionForm
+                      title="Reabrir período"
+                      trigger="Reabrir período"
+                      triggerClass="school-secondary"
+                      button="Reabrir período"
+                      onSubmit={(d) =>
+                        send("closure", {
+                          ...d,
+                          classId,
+                          periodId,
+                          state: "Reaberto",
+                        })
+                      }
+                    >
+                      <Field label="Motivo da reabertura" name="reason" />
+                    </ActionForm>
+                  )}
+                  {closure?.publicRows && (
+                    <ReportDownload
+                      school={state.name}
+                      reports={[reportGroup(state, closure)]}
+                    />
+                  )}
+                </>
+              )
+            }
+          >
             <RecordCards
               key={classId + periodId}
               limit={9}
@@ -642,128 +795,86 @@ export function Closing({ state, send, office }) {
                 );
               })}
             </RecordCards>
-            {office && (
-              <div className="school-actions">
-                {(!closure || closure.state === "Reaberto") && (
-                  <ActionForm
-                    title="Fechar período"
-                    trigger="Fechar período"
-                    button="Fechar período"
-                    onSubmit={() =>
-                      send("closure", { classId, periodId, state: "Fechado" })
-                    }
-                  >
-                    <p>
-                      Revise as notas e a frequência antes de fechar este
-                      período.
-                    </p>
-                  </ActionForm>
-                )}
-                {closure?.state === "Fechado" && (
-                  <ActionForm
-                    title="Publicar boletins"
-                    trigger="Publicar boletins"
-                    button="Publicar boletins"
-                    onSubmit={() =>
-                      send("closure", { classId, periodId, state: "Publicado" })
-                    }
-                  >
-                    <p>
-                      Os boletins deste período ficarão disponíveis para os
-                      estudantes e seus responsáveis.
-                    </p>
-                  </ActionForm>
-                )}
-              </div>
-            )}
-            {office && closure && closure.state !== "Reaberto" && (
-              <ActionForm
-                title="Reabrir período"
-                trigger="Reabrir período"
-                triggerClass="school-secondary"
-                button="Reabrir período"
-                onSubmit={(d) =>
-                  send("closure", {
-                    ...d,
-                    classId,
-                    periodId,
-                    state: "Reaberto",
-                  })
-                }
-              >
-                <Field label="Motivo da reabertura" name="reason" />
-              </ActionForm>
-            )}
-          </>
-        )}
-      </Panel>
-      {office && (
-        <Panel title="Configuração acadêmica">
-          <div className="school-actions">
-            <ActionForm
-              title="Criar período letivo"
-              trigger="Criar período"
-              button="Criar período"
-              onSubmit={(d) => send("period", d)}
-            >
-              <Field label="Nome do período" name="name" />
-              <Field label="Início do período" name="start" type="date" />
-              <Field label="Fim do período" name="end" type="date" />
-            </ActionForm>
-
-            <ActionForm
-              title="Editar critérios escolares"
-              trigger="Editar critérios"
-              triggerClass="school-secondary"
-              onSubmit={(d) => send("policy", d)}
-            >
-              <Field
-                label="Ano padrão"
-                name="year"
-                type="number"
-                value={state.policy.year}
-              />
-              <Field
-                label="Média de referência"
-                name="target"
-                type="number"
-                min={0}
-                max={10}
-                step="0.1"
-                value={state.policy.target}
-              />
-              <Field
-                label="Frequência de referência (%)"
-                name="attendance"
-                type="number"
-                min={75}
-                max={100}
-                value={state.policy.attendance}
-              />
-              <Field
-                label="Frequência pré-escolar (%)"
-                name="preschoolAttendance"
-                type="number"
-                min={60}
-                max={100}
-                value={state.policy.preschoolAttendance}
-              />
-              <Field
-                label="Cálculo da média"
-                name="grading"
-                options={[
-                  ["weighted", "Média ponderada"],
-                  ["simple", "Média simples"],
-                ]}
-                value={state.policy.grading}
-              />
-            </ActionForm>
-          </div>
-        </Panel>
+          </Panel>
+        </div>
       )}
     </>
   );
 }
+
+function ClosingSettings({ state, send }) {
+  return (
+    <>
+      <ActionForm
+        title="Criar período letivo"
+        trigger={
+          <>
+            <Plus size={16} aria-hidden="true" /> Criar período
+          </>
+        }
+        button="Criar período"
+        onSubmit={(d) => send("period", d)}
+      >
+        <Field label="Nome do período" name="name" />
+        <Field label="Início do período" name="start" type="date" />
+        <Field label="Fim do período" name="end" type="date" />
+      </ActionForm>
+
+      <ActionForm
+        title="Editar critérios escolares"
+        trigger={
+          <>
+            <Pencil size={15} aria-hidden="true" /> Editar critérios
+          </>
+        }
+        triggerClass="school-secondary"
+        onSubmit={(d) => send("policy", d)}
+      >
+        <Field
+          label="Ano padrão"
+          name="year"
+          type="number"
+          value={state.policy.year}
+        />
+        <Field
+          label="Média de referência"
+          name="target"
+          type="number"
+          min={0}
+          max={10}
+          step="0.1"
+          value={state.policy.target}
+        />
+        <Field
+          label="Frequência de referência (%)"
+          name="attendance"
+          type="number"
+          min={75}
+          max={100}
+          value={state.policy.attendance}
+        />
+        <Field
+          label="Frequência pré-escolar (%)"
+          name="preschoolAttendance"
+          type="number"
+          min={60}
+          max={100}
+          value={state.policy.preschoolAttendance}
+        />
+        <Field
+          label="Cálculo da média"
+          name="grading"
+          options={[
+            ["weighted", "Média ponderada"],
+            ["simple", "Média simples"],
+          ]}
+          value={state.policy.grading}
+        />
+      </ActionForm>
+    </>
+  );
+}
+
 export function FollowUp({ state, send, initialId }) {
   const initialCase = state.cases.find((c) => c.id === initialId);
   const [classId, setClass] = useState(initialCase?.classId || ""),

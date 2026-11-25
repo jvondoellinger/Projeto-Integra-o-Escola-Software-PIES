@@ -1,4 +1,11 @@
-import { BookOpen, GraduationCap, School, Users } from "lucide-react";
+import {
+  BookOpen,
+  GraduationCap,
+  Pencil,
+  Plus,
+  School,
+  Users,
+} from "lucide-react";
 import React, { useRef, useState } from "react";
 import ReportDownload, { reportGroup } from "./ReportDownload.jsx";
 import {
@@ -42,7 +49,11 @@ export function Accounts({ state, send, user, demo }) {
         <div className="school-create-actions">
           <ActionForm
             title="Criar conta"
-            trigger="Criar conta"
+            trigger={
+              <>
+                <Plus size={16} aria-hidden="true" /> Criar conta
+              </>
+            }
             button="Criar conta"
             onSubmit={(d) => send("account", d)}
           >
@@ -141,7 +152,7 @@ export function Enrollment({ state, send }) {
               setStudentDialog(true);
             }}
           >
-            Cadastrar estudante
+            <Plus size={16} aria-hidden="true" /> Cadastrar estudante
           </button>
           <ActionForm
             title="Efetivar ou renovar matrícula"
@@ -204,7 +215,7 @@ export function Enrollment({ state, send }) {
                       setStudentDialog(true);
                     }}
                   >
-                    Editar vínculos
+                    <Pencil size={15} aria-hidden="true" /> Editar vínculos
                   </button>
                   <button onClick={() => setDocument(s.id)}>Documentos</button>
                   <button
@@ -512,19 +523,23 @@ export function Classes({ state, send, office }) {
   );
   return (
     <>
-      <Panel title="Turmas e horários">
-        {office && (
-          <button
-            className="school-primary school-create-actions"
-            aria-haspopup="dialog"
-            onClick={() => {
-              setEditing(null);
-              setClassDialog(true);
-            }}
-          >
-            Criar turma
-          </button>
-        )}
+      <Panel
+        title="Turmas e horários"
+        actions={
+          office && (
+            <button
+              className="school-primary"
+              aria-haspopup="dialog"
+              onClick={() => {
+                setEditing(null);
+                setClassDialog(true);
+              }}
+            >
+              <Plus size={16} aria-hidden="true" /> Criar turma
+            </button>
+          )
+        }
+      >
         <div className="school-filters">
           <label>
             Buscar por turma ou ano
