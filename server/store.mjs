@@ -8,6 +8,7 @@ import {
 } from "node:crypto";
 import { mkdirSync } from "node:fs";
 import { dirname, resolve } from "node:path";
+import { schoolSchema } from "./schema.mjs";
 
 export const roles = [
   "secretaria",
@@ -20,11 +21,8 @@ export const roles = [
 const file = process.env.PIES_DB || resolve(".pies/escola.sqlite");
 if (file !== ":memory:") mkdirSync(dirname(file), { recursive: true });
 export const db = new DatabaseSync(file);
-db.exec(`PRAGMA journal_mode=WAL; PRAGMA foreign_keys=ON;
-CREATE TABLE IF NOT EXISTS schools(id TEXT PRIMARY KEY, network TEXT NOT NULL, name TEXT NOT NULL, data TEXT NOT NULL);
-CREATE TABLE IF NOT EXISTS accounts(id TEXT PRIMARY KEY, school TEXT NOT NULL REFERENCES schools(id), email TEXT UNIQUE NOT NULL, name TEXT NOT NULL, role TEXT NOT NULL, password TEXT NOT NULL, active INTEGER NOT NULL DEFAULT 1);
-CREATE TABLE IF NOT EXISTS sessions(token TEXT PRIMARY KEY, account TEXT NOT NULL REFERENCES accounts(id), expires INTEGER NOT NULL);
-CREATE TABLE IF NOT EXISTS operations(school TEXT NOT NULL, account TEXT NOT NULL, id TEXT NOT NULL, PRIMARY KEY(school,account,id));`);
+db.exec("PRAGMA journal_mode=WAL;");
+db.exec(schoolSchema);
 export function atomic(fn) {
   db.exec("BEGIN IMMEDIATE");
   try {

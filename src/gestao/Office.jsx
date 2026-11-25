@@ -32,7 +32,7 @@ export const stages = [
   "EJA",
   "Educação Profissional",
 ];
-export function Accounts({ state, send, user }) {
+export function Accounts({ state, send, user, demo }) {
   return (
     <>
       <Panel title="Contas da escola">
@@ -70,13 +70,15 @@ export function Accounts({ state, send, user }) {
             name="role"
             options={Object.entries(roles).filter(([r]) => r !== "rede")}
           />
-          <Field
-            label="Senha inicial"
-            name="password"
-            type="password"
-            minLength={12}
-            autoComplete="new-password"
-          />
+          {!demo && (
+            <Field
+              label="Senha inicial"
+              name="password"
+              type="password"
+              minLength={12}
+              autoComplete="new-password"
+            />
+          )}
         </Form>
       </Panel>
     </>

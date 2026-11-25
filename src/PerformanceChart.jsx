@@ -95,7 +95,7 @@ export default function PerformanceChart({
                 x2="690"
                 y1={y(n)}
                 y2={y(n)}
-                stroke="#dce5dc"
+                stroke="#dbe0e6"
                 strokeDasharray="4 4"
               />
               <text x="12" y={y(n) + 5}>
@@ -116,7 +116,7 @@ export default function PerformanceChart({
               key={i}
               points={points.join(" ")}
               fill="none"
-              stroke="#28765c"
+              stroke="#1b3e83"
               strokeWidth="3"
             />
           ))}
@@ -131,8 +131,8 @@ export default function PerformanceChart({
                     cx={x(i)}
                     cy={y(v)}
                     r={active === i ? 7 : 4}
-                    fill={active === i ? "#225c49" : "white"}
-                    stroke="#225c49"
+                    fill={active === i ? "#183266" : "white"}
+                    stroke="#183266"
                     strokeWidth="2"
                   />
                   <text x={x(i)} y={y(v) - 14} textAnchor="middle">

@@ -3,8 +3,8 @@
 }
 body {
   margin: 0;
-  background: #f4f7f5;
-  color: #19392f;
+  background: #f4f5f7;
+  color: #13223f;
   font:
     16px "DM Sans",
     sans-serif;
@@ -78,8 +78,8 @@ a {
   top: 0;
   height: 100dvh;
   overflow: auto;
-  background: #123c32;
-  color: #f4fcf6;
+  background: #0f1f3f;
+  color: #f4f7fc;
   padding: 26px 17px 18px;
 }
 .school-brand {
@@ -93,8 +93,8 @@ a {
   place-items: center;
   width: 42px;
   height: 42px;
-  background: #ccebd8;
-  color: #163f33;
+  background: #cad7ed;
+  color: #0f2146;
   border-radius: 11px;
 }
 .school-brand strong {
@@ -108,7 +108,7 @@ a {
 }
 .school-unit {
   font-size: 0.82rem;
-  color: #d0e4d7;
+  color: #cfd7e5;
   padding: 20px 8px 25px;
 }
 .school-side nav {
@@ -130,7 +130,7 @@ a {
 }
 .school-side nav button:hover,
 .school-side nav button.active {
-  background: #2c5849;
+  background: #233861;
   color: white;
 }
 .school-exit {
@@ -145,7 +145,7 @@ a {
   padding: 18px clamp(16px, 4vw, 48px);
   min-height: 62px;
   background: white;
-  border-bottom: 1px solid #dbe8df;
+  border-bottom: 1px solid #dae0e9;
   font-size: 0.875rem;
 }
 .school-top span {
@@ -170,13 +170,13 @@ a {
   font-weight: 700;
   letter-spacing: 0.08em;
   text-transform: uppercase;
-  color: #4b675b;
+  color: #405172;
   margin-bottom: 6px;
 }
 .school-panel,
 .performance {
   background: white;
-  border: 1px solid #d8e4db;
+  border: 1px solid #d7dce5;
   border-radius: 12px;
   padding: clamp(16px, 3vw, 25px);
   margin-bottom: 20px;
@@ -200,7 +200,7 @@ a {
 .school-caption,
 .school-empty {
   font-size: 0.88rem;
-  color: #4c695d;
+  color: #415374;
   margin: 7px 0 15px;
 }
 .school-fields {
@@ -243,8 +243,8 @@ a {
   width: 100%;
   min-width: 0;
   padding: 9px;
-  border: 1px solid #a4b8ae;
-  color: #19392f;
+  border: 1px solid #a3abb9;
+  color: #13223f;
   background: white;
 }
 .school-form input[type="checkbox"] {
@@ -272,19 +272,19 @@ a {
 .school-secondary,
 .school-actions > button {
   padding: 9px 13px;
-  border: 1px solid #adc0b4;
-  background: #f6faf7;
-  color: #204b3d;
+  border: 1px solid #acb4c1;
+  background: #f6f7fa;
+  color: #182c53;
   font-weight: 700;
   font-size: 0.86rem;
 }
 .school-primary {
-  background: #195641;
+  background: #102a5f;
   color: white;
-  border-color: #195641;
+  border-color: #102a5f;
 }
 .school-primary:hover {
-  background: #123f32;
+  background: #0f2042;
 }
 .school-table {
   overflow: auto;
@@ -302,20 +302,20 @@ a {
 .school-table td,
 .performance th,
 .performance td {
-  border-bottom: 1px solid #e1ebe3;
+  border-bottom: 1px solid #e0e5ec;
   padding: 10px;
   vertical-align: top;
 }
 .school-table th,
 .performance th {
-  background: #eff5ef;
+  background: #eff1f5;
   white-space: nowrap;
 }
 .school-table td {
   overflow-wrap: anywhere;
 }
 .school-record {
-  border-top: 1px solid #dce7de;
+  border-top: 1px solid #dbe0e8;
   padding: 15px 0;
 }
 .school-record h3 {
@@ -332,8 +332,8 @@ a {
 .school-pill,
 .performance .badge {
   display: inline-block;
-  background: #e5f1e7;
-  color: #244f3e;
+  background: #e4eaf2;
+  color: #1c3057;
   border-radius: 5px;
   padding: 4px 8px;
   font-size: 0.76rem;
@@ -352,8 +352,8 @@ a {
   text-align: left;
   background: white;
   padding: 17px;
-  border: 1px solid #d8e4db;
-  color: #204437;
+  border: 1px solid #d7dce5;
+  color: #192a4b;
   border-radius: 11px;
 }
 .school-metrics button strong {
@@ -392,11 +392,11 @@ a {
   color: #862e22;
 }
 .school-success {
-  background: #e3f3e9;
-  color: #204e39;
+  background: #e2e9f4;
+  color: #182e56;
 }
 .school-footer {
-  color: #4c695d;
+  color: #415374;
   font-size: 0.8rem;
   margin: 25px 0 10px;
 }
@@ -417,7 +417,7 @@ a {
   min-height: 100vh;
 }
 .school-login-brand {
-  background: #123c32;
+  background: #0f1f3f;
   color: white;
   padding: clamp(25px, 8vw, 120px) clamp(25px, 7vw, 100px);
 }
@@ -426,7 +426,7 @@ a {
   font-size: clamp(2rem, 6vw, 5.2rem);
 }
 .school-login-brand p {
-  color: #d0e4d7;
+  color: #cfd7e5;
 }
 .school-login-form {
   align-self: center;
@@ -468,7 +468,7 @@ a {
     width: min(270px, 90vw);
     height: auto;
     z-index: 5;
-    box-shadow: 5px 0 35px #123c3250;
+    box-shadow: 5px 0 35px #0f1f3f50;
   }
   .school-menu {
     display: flex;
@@ -536,7 +536,7 @@ a {
 .school-quick-access {
   padding: 18px 0;
   margin: 18px 0 10px;
-  border-top: 1px solid #d8e4db;
+  border-top: 1px solid #d7dce5;
 }
 .school-quick-access .school-actions {
   gap: 8px;
@@ -549,18 +549,18 @@ a {
   margin: 12px 0;
 }
 .record-card {
-  --accent-bg: #e5f1e8;
-  --accent: #24553f;
+  --accent-bg: #e4e9f2;
+  --accent: #1b325e;
   position: relative;
   min-width: 0;
   display: flex;
   flex-direction: column;
   gap: 8px;
   align-items: flex-start;
-  border: 1px solid #d7e4da;
+  border: 1px solid #d6dce5;
   border-radius: 12px;
   padding: 17px;
-  background: #fcfefc;
+  background: #fcfdfe;
   overflow-wrap: anywhere;
 }
 .record-card.tone-blue {
@@ -591,7 +591,7 @@ a {
 }
 .record-detail {
   font-size: 0.87rem;
-  color: #416254;
+  color: #37496c;
 }
 .record-open {
   background: var(--accent-bg);
@@ -628,7 +628,7 @@ a {
 }
 .record-metrics dt {
   font-size: 0.73rem;
-  color: #416254;
+  color: #37496c;
 }
 .record-metrics dd {
   margin: 0;
@@ -642,8 +642,8 @@ a {
   font-size: 0.82rem;
 }
 .period-tabs .is-active {
-  background: #195641;
-  border-color: #195641;
+  background: #102a5f;
+  border-color: #102a5f;
   color: white;
 }
 .day-agenda > h2,
@@ -660,7 +660,7 @@ a {
 }
 .month-calendar {
   min-width: 0;
-  border: 1px solid #d8e5dc;
+  border: 1px solid #d7dde6;
   border-radius: 12px;
   background: #fff;
   padding: 10px;
@@ -697,17 +697,17 @@ a {
   text-align: center;
   font-size: 0.75rem;
   font-weight: 700;
-  color: #476758;
+  color: #3c4f72;
   padding: 4px 0;
 }
 .month-day {
   text-align: left;
-  background: #f5f9f5;
-  color: #19392f;
+  background: #f5f7f9;
+  color: #13223f;
   min-width: 0;
   min-height: 91px;
   align-self: stretch;
-  border: 1px solid #e3ebe4;
+  border: 1px solid #e3e6eb;
   border-radius: 7px;
   padding: 6px;
   position: relative;
@@ -718,15 +718,15 @@ a {
 }
 .month-day.outside {
   background: #fafafa;
-  color: #65766d;
+  color: #596882;
 }
 .month-day[aria-pressed="true"] {
-  background: #e0f1e6;
-  border-color: #3d745b;
-  box-shadow: inset 0 0 0 1px #3d745b;
+  background: #dfe6f2;
+  border-color: #314c80;
+  box-shadow: inset 0 0 0 1px #314c80;
 }
 .month-day[aria-current="date"] .month-number {
-  background: #195641;
+  background: #102a5f;
   color: white;
   border-radius: 50%;
   min-width: 22px;
@@ -745,8 +745,8 @@ a {
   right: 6px;
   font-size: 0.65rem;
   font-weight: 700;
-  color: #345a49;
-  background: #e1efe5;
+  color: #2b3e63;
+  background: #e0e6f0;
   border-radius: 5px;
   padding: 1px 4px;
 }
@@ -760,8 +760,8 @@ a {
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
-  background: #e4f0e6;
-  color: #264d3b;
+  background: #e3e9f1;
+  color: #1e3155;
   padding: 2px 4px;
   border-radius: 3px;
 }
@@ -775,7 +775,7 @@ a {
 }
 .month-extra {
   font-size: 0.64rem;
-  color: #476758;
+  color: #3c4f72;
 }
 .month-calendar-compact .month-day {
   min-height: 41px;
