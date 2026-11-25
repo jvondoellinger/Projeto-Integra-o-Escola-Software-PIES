@@ -249,6 +249,7 @@ export function Evaluations({ state, send, initialId }) {
     .sort((a, b) => b.day.localeCompare(a.day));
   const selected = state.assessments.find((a) => a.id === open);
   const c = state.classes.find((x) => x.id === selected?.classId);
+  const deliveries = state.submissions.filter((item) => item.submitted);
   return (
     <>
       <ActionForm
@@ -386,7 +387,7 @@ export function Evaluations({ state, send, initialId }) {
           empty="Nenhuma avaliação corresponde à seleção."
         >
           {assessments.map((a) => {
-            const submitted = state.submissions.filter(
+            const submitted = deliveries.filter(
               (s) => s.assessmentId === a.id,
             ).length;
             const corrected = state.grades.filter(
@@ -460,18 +461,21 @@ export function Evaluations({ state, send, initialId }) {
               const g = state.grades.find(
                 (x) => x.assessmentId === selected.id && x.studentId === s.id,
               );
-              const sub = state.submissions.find(
+              const submission = deliveries.find(
                 (x) => x.assessmentId === selected.id && x.studentId === s.id,
               );
+              const deliveryStatus = submission
+                ? `Entregue em ${br(submission.submitted)}`
+                : selected.format === "Prova"
+                  ? "Prova sem entrega pelo portal"
+                  : "Nenhuma resposta enviada pelo portal";
               return (
                 <article
                   className="school-record"
                   key={`${selected.id}-${s.id}`}
                 >
                   <h3>{s.name}</h3>
-                  {sub && (
-                    <p className="school-pre school-callout">{sub.text}</p>
-                  )}
+                  <p className="record-detail">{deliveryStatus}</p>
                   {g && (
                     <p className="record-detail school-pre">
                       {g.score == null
@@ -482,6 +486,7 @@ export function Evaluations({ state, send, initialId }) {
                   )}
                   <ActionForm
                     title={`Corrigir avaliação de ${s.name}`}
+                    className="school-correction-form"
                     trigger="Lançar ou editar nota"
                     triggerClass="school-secondary"
                     button={`Salvar avaliação de ${s.name}`}
@@ -493,24 +498,34 @@ export function Evaluations({ state, send, initialId }) {
                       })
                     }
                   >
-                    {c.stage !== "Educação Infantil" && (
+                    <div className="school-correction-response">
+                      <p className="school-caption">{selected.title}</p>
+                      <h3>Resposta do aluno</h3>
+                      <p className="school-caption">{deliveryStatus}</p>
+                      {submission && (
+                        <p className="school-pre">{submission.text}</p>
+                      )}
+                    </div>
+                    <div className="school-correction-fields">
+                      {c.stage !== "Educação Infantil" && (
+                        <Field
+                          label={`Nota de ${s.name}`}
+                          name="score"
+                          type="number"
+                          min={0}
+                          max={10}
+                          step="0.01"
+                          value={g?.score ?? ""}
+                        />
+                      )}
                       <Field
-                        label={`Nota de ${s.name}`}
-                        name="score"
-                        type="number"
-                        min={0}
-                        max={10}
-                        step="0.01"
-                        value={g?.score ?? ""}
+                        label={`Devolutiva de ${s.name}`}
+                        name="feedback"
+                        type="textarea"
+                        value={g?.feedback}
+                        optional={c.stage !== "Educação Infantil"}
                       />
-                    )}
-                    <Field
-                      label={`Devolutiva de ${s.name}`}
-                      name="feedback"
-                      type="textarea"
-                      value={g?.feedback}
-                      optional={c.stage !== "Educação Infantil"}
-                    />
+                    </div>
                   </ActionForm>
                 </article>
               );
