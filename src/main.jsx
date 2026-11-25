@@ -280,7 +280,7 @@ function App() {
           <span className="brand-icon">
             <GraduationCap />
           </span>
-          pies<span className="brand-dot">.</span>
+          PIES<span className="brand-dot">.</span>
         </a>
         <div className="workspace">
           <span className="school-icon">
