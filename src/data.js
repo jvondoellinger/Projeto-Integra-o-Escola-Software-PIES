@@ -105,11 +105,13 @@ export const students = [
   },
 ];
 export const status = (s) =>
-  s.average < 6 || s.attendance < 85
-    ? "Precisa de apoio"
-    : s.average < 7
-      ? "Em acompanhamento"
-      : "Bom desenvolvimento";
+  s.average === null
+    ? "Sem avaliação"
+    : s.average < 6 || s.attendance < 85
+      ? "Precisa de apoio"
+      : s.average < 7
+        ? "Em acompanhamento"
+        : "Bom desenvolvimento";
 export const initials = (name) =>
   name
     .split(" ")
@@ -117,7 +119,9 @@ export const initials = (name) =>
     .slice(0, 2)
     .join("");
 export const number = (n) =>
-  n.toLocaleString("pt-BR", {
-    minimumFractionDigits: 1,
-    maximumFractionDigits: 1,
-  });
+  n === null || n === undefined
+    ? "—"
+    : n.toLocaleString("pt-BR", {
+        minimumFractionDigits: 1,
+        maximumFractionDigits: 1,
+      });

@@ -1,4 +1,6 @@
 import React, { useState, useEffect } from "react";
+import PerformanceChart from "./PerformanceChart.jsx";
+import { seedGrades, studentMetrics, mean as gradeMean } from "./learning.js";
 import { readRoute, pushRoute } from "./routes.js";
 import { createRoot } from "react-dom/client";
 import {
@@ -11,7 +13,6 @@ import {
   Settings,
   Search,
   ChevronRight,
-  ArrowUpRight,
   GraduationCap,
   CalendarDays,
   Download,
@@ -31,6 +32,7 @@ import "@fontsource/manrope/latin-600.css";
 import "@fontsource/manrope/latin-700.css";
 import "@fontsource/manrope/latin-800.css";
 import "./style.css";
+import "./academic.css";
 import {
   CookieNotice,
   CookieDialog,
@@ -54,7 +56,11 @@ const nav = [
   ["Planos de apoio", HeartHandshake],
   ["Relatórios", ChartNoAxesCombined],
 ];
+const initialGrades = seedGrades(students);
 function App() {
+  const [grades, setGrades] = useState(() =>
+    readSession("pies-grades", initialGrades),
+  );
   const [page, setPage] = useState(() => readRoute().page),
     [query, setQuery] = useState(""),
     [classroom, setClassroom] = useState("Todas as turmas"),
@@ -147,11 +153,9 @@ function App() {
     "3º bimestre",
     "4º bimestre",
   ].indexOf(period);
-  const periodStudents = students.map((s) => ({
-    ...s,
-    average: periodIndex === 3 ? s.average : s.scores[periodIndex],
-    previous: s.scores[Math.max(0, periodIndex - 1)],
-  }));
+  const periodStudents = students.map((s) =>
+    studentMetrics(s, grades, periodIndex),
+  );
   const filtered = periodStudents.filter(
     (s) =>
       (classroom === "Todas as turmas" || s.classroom === classroom) &&
@@ -200,8 +204,8 @@ function App() {
     toast("Relatório exportado. Guarde o arquivo em local seguro.");
   }
   const mean = filtered.length
-    ? filtered.reduce((a, s) => a + s.average, 0) / filtered.length
-    : 0;
+    ? gradeMean(filtered.map((s) => s.average).filter((v) => v !== null))
+    : null;
   return (
     <>
       <a className="skip" href="#main">
@@ -370,9 +374,9 @@ function App() {
           {selected ? (
             <Profile
               key={selected.id}
-              student={selected}
+              student={studentMetrics(selected, grades, periodIndex)}
               back={() => go(page)}
-              Chart={Chart}
+              grades={grades}
               plans={plans}
               setPlans={setPlans}
               toast={toast}
@@ -425,31 +429,11 @@ function App() {
                     ))}
                   </section>
                   <div className="overview-grid">
-                    <section className="panel evolution">
-                      <div className="section-title">
-                        <div>
-                          <h2>Aprendizagem em movimento</h2>
-                          <p>Evolução da média · Matemática</p>
-                        </div>
-                        <span className="badge green">
-                          <ArrowUpRight size={14} />
-                          Progresso contínuo
-                        </span>
-                      </div>
-                      <Chart
-                        values={[0, 1, 2, 3, 4].map((i) =>
-                          filtered.length
-                            ? filtered.reduce((a, s) => a + s.scores[i], 0) /
-                              filtered.length
-                            : 0,
-                        )}
-                        id="class"
-                      />
-                      <div className="chart-legend">
-                        <i />
-                        Média das turmas <span>Histórico até novembro</span>
-                      </div>
-                    </section>
+                    <PerformanceChart
+                      grades={grades}
+                      studentIds={filtered.map((s) => s.id)}
+                      title="Aprendizagem ao longo do ano"
+                    />
                     <section className="focus-card">
                       <div className="eyebrow">SEU OLHAR FAZ A DIFERENÇA</div>
                       <span className="focus-art">
@@ -561,8 +545,9 @@ function App() {
                                       : "trend down"
                                   }
                                 >
-                                  {s.average >= s.previous ? "↗" : "↘"}{" "}
-                                  {number(Math.abs(s.average - s.previous))}
+                                  {s.previous === null || s.average === null
+                                    ? "Sem comparação"
+                                    : `${s.average >= s.previous ? "↗" : "↘"} ${number(Math.abs(s.average - s.previous))}`}
                                 </span>
                               </td>
                               <td>{s.attendance}%</td>
@@ -669,68 +654,6 @@ function App() {
         </div>
       )}
     </>
-  );
-}
-function Chart({ values, id }) {
-  const points = values
-    .map((v, i) => `${45 + i * 135},${190 - v * 16}`)
-    .join(" ");
-  return (
-    <div className="chart">
-      <svg
-        role="img"
-        aria-label={"Evolução das médias: " + values.map(number).join(", ")}
-        viewBox="0 0 625 235"
-      >
-        <defs>
-          <linearGradient id={"fill-" + id} x1="0" y1="0" x2="0" y2="1">
-            <stop stopColor="#3c927c" stopOpacity=".18" />
-            <stop offset="1" stopColor="#3c927c" stopOpacity="0" />
-          </linearGradient>
-        </defs>
-        {[4, 6, 8, 10].map((n) => (
-          <g key={n}>
-            <line
-              x1="38"
-              x2="600"
-              y1={190 - n * 16}
-              y2={190 - n * 16}
-              stroke="#e9eeeb"
-              strokeDasharray="4 5"
-            />
-            <text x="8" y={195 - n * 16}>
-              {n}
-            </text>
-          </g>
-        ))}
-        <polygon
-          points={`45,195 ${points} 585,195`}
-          fill={`url(#fill-${id})`}
-        />
-        <polyline
-          points={points}
-          fill="none"
-          stroke="#297a65"
-          strokeWidth="3"
-          strokeLinejoin="round"
-        />
-        {values.map((v, i) => (
-          <g key={i}>
-            <circle
-              cx={45 + i * 135}
-              cy={190 - v * 16}
-              r="4"
-              fill="white"
-              stroke="#297a65"
-              strokeWidth="2"
-            />
-            <text x={45 + i * 135} y="225" textAnchor="middle">
-              {["JUL", "AGO", "SET", "OUT", "NOV"][i]}
-            </text>
-          </g>
-        ))}
-      </svg>
-    </div>
   );
 }
 createRoot(document.getElementById("root")).render(<App />);

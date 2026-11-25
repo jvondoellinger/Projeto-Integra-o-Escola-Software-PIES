@@ -1,0 +1,92 @@
+.performance {
+  min-width: 0;
+}
+.performance-summary {
+  display: flex;
+  gap: 28px;
+  margin: 24px 0;
+}
+.performance-summary strong {
+  font-family: Manrope, sans-serif;
+  font-size: 1.6rem;
+  display: block;
+}
+.performance-summary span {
+  font-size: 0.8rem;
+  color: #536951;
+}
+.annual-scroll {
+  overflow: auto;
+}
+.annual-scroll svg {
+  width: 100%;
+  min-width: 570px;
+  display: block;
+}
+.annual-scroll text {
+  font-family: "DM Sans", sans-serif;
+  font-size: 13px;
+  fill: #4e6552;
+}
+.month-controls {
+  display: flex;
+  gap: 3px;
+  flex-wrap: wrap;
+  margin-top: 12px;
+}
+.month-controls button {
+  background: #f3f6ef;
+  padding: 7px 8px;
+  font-size: 0.875rem;
+  border-radius: 5px;
+}
+.month-controls button.active {
+  color: white;
+  background: #225c49;
+}
+.month-detail {
+  padding: 16px;
+  background: #f6f8f3;
+  border-radius: 8px;
+  margin-top: 15px;
+  font-size: 0.875rem;
+}
+.month-detail p {
+  font-size: 0.8rem;
+  margin-top: 7px;
+}
+.performance details {
+  margin-top: 16px;
+  font-size: 0.875rem;
+}
+.performance summary {
+  cursor: pointer;
+  color: #365c45;
+  padding: 8px 0;
+}
+.performance .table-wrap {
+  margin-top: 12px;
+}
+.performance .table-wrap table {
+  white-space: normal;
+}
+.performance .table-wrap td:first-child {
+  white-space: nowrap;
+}
+.performance-summary > div {
+  flex: 1;
+}
+@media (max-width: 600px) {
+  .performance-summary {
+    gap: 16px;
+  }
+  .performance-summary span {
+    font-size: 0.8rem;
+  }
+  .performance .section-title {
+    align-items: flex-start;
+  }
+  .month-controls button {
+    flex: 1 0 12%;
+  }
+}
