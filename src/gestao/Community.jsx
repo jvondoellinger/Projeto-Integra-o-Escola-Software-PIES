@@ -273,44 +273,40 @@ export function Notices({ state, send, staff, office, initialId }) {
             </ActionForm>
           </div>
         )}
-        {state.notices.length === 0 && (
-          <p className="school-empty">Ainda não há comunicados.</p>
-        )}
-        {[...state.notices].reverse().map((n) => (
-          <article
-            className={`school-record${n.id === initialId ? " is-featured" : ""}`}
-            key={n.id}
-            ref={n.id === initialId ? focused : undefined}
-            tabIndex={n.id === initialId ? -1 : undefined}
-          >
-            <small>
-              {br(n.day)} ·{" "}
-              {n.classId ? nameOf(state.classes, n.classId) : "Toda a escola"}
-            </small>
-            <h3>{n.title}</h3>
-            <p className="school-pre">{n.body}</p>
-            {!staff &&
-              ((state.receipts || []).some((r) => r.noticeId === n.id) ? (
-                <span className="school-pill">Ciência confirmada</span>
-              ) : (
-                <button
-                  className="school-secondary"
-                  onClick={() => send("receipt", { id: n.id })}
-                >
-                  Confirmar ciência
-                </button>
-              ))}
-            {office && (
-              <p className="school-caption">
-                {
-                  (state.receipts || []).filter((r) => r.noticeId === n.id)
-                    .length
-                }{" "}
-                confirmação(ões)
-              </p>
-            )}
-          </article>
-        ))}
+        <RecordCards empty="Ainda não há comunicados.">
+          {[...state.notices].reverse().map((n) => (
+            <RecordCard
+              title={n.title}
+              eyebrow={`${br(n.day)} · ${n.classId ? nameOf(state.classes, n.classId) : "Toda a escola"}`}
+              selected={n.id === initialId}
+              key={n.id}
+              ref={n.id === initialId ? focused : undefined}
+              tabIndex={n.id === initialId ? -1 : undefined}
+            >
+              <p className="school-pre">{n.body}</p>
+              {!staff &&
+                ((state.receipts || []).some((r) => r.noticeId === n.id) ? (
+                  <span className="school-pill">Ciência confirmada</span>
+                ) : (
+                  <button
+                    className="school-secondary"
+                    onClick={() => send("receipt", { id: n.id })}
+                  >
+                    Confirmar ciência
+                  </button>
+                ))}
+              {office && (
+                <p className="school-caption">
+                  {
+                    (state.receipts || []).filter((r) => r.noticeId === n.id)
+                      .length
+                  }{" "}
+                  confirmação(ões)
+                </p>
+              )}
+            </RecordCard>
+          ))}
+        </RecordCards>
       </Panel>
     </>
   );
@@ -467,6 +463,7 @@ export function Family({ state, send, user, initialDay, onStudentFocus }) {
               {br(selected.closure.publishedAt)}
             </p>
             <Table
+              fixed
               columns={["Avaliação", "Nota", "Devolutiva"]}
               rows={selected.marks.map((g) => [
                 g.id,

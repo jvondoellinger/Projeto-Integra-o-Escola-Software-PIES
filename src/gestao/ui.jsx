@@ -6,10 +6,58 @@ import React, {
   useRef,
   useState,
 } from "react";
-import { X } from "lucide-react";
+import { LayoutGrid, List, X } from "lucide-react";
 
 export const ActionFeedback = createContext(null);
+export const RecordLayout = createContext("cards");
 const ActionSubmission = createContext(null);
+
+const recordLayoutKey = "pies-record-layout";
+
+export function initialRecordLayout() {
+  try {
+    return localStorage.getItem(recordLayoutKey) === "list" ? "list" : "cards";
+  } catch {
+    return "cards";
+  }
+}
+
+export function RecordLayoutPicker({ onChange }) {
+  const selected = useContext(RecordLayout);
+  return (
+    <div
+      className="record-layout-picker school-no-print"
+      role="group"
+      aria-label="Visualização dos registros"
+    >
+      <button
+        type="button"
+        aria-pressed={selected === "cards"}
+        onClick={() => change("cards")}
+      >
+        <LayoutGrid size={16} aria-hidden="true" />
+        Cartões
+      </button>
+      <button
+        type="button"
+        aria-pressed={selected === "list"}
+        onClick={() => change("list")}
+      >
+        <List size={17} aria-hidden="true" />
+        Lista
+      </button>
+    </div>
+  );
+
+  function change(layout) {
+    onChange(layout);
+    try {
+      localStorage.setItem(recordLayoutKey, layout);
+    } catch {
+      // The preference still applies in this tab.
+    }
+  }
+}
 
 export function ActionDialog({
   title,
@@ -286,7 +334,27 @@ export function Table({
   columns,
   rows,
   empty = "Nenhum registro encontrado.",
+  fixed = false,
 }) {
+  const layout = useContext(RecordLayout);
+  if (!fixed && layout === "cards") {
+    return (
+      <RecordCards empty={empty}>
+        {rows.map(([key, title, ...cells]) => (
+          <RecordCard key={key} title={title}>
+            <dl className="record-metrics">
+              {cells.map((cell, index) => (
+                <div key={index}>
+                  <dt>{columns[index + 1]}</dt>
+                  <dd>{cell}</dd>
+                </div>
+              ))}
+            </dl>
+          </RecordCard>
+        ))}
+      </RecordCards>
+    );
+  }
   return rows.length ? (
     <div
       className="school-table"
@@ -342,8 +410,14 @@ export function RecordCards({
   if (!cards.length) return <p className="school-empty">{empty}</p>;
   return (
     <>
-      <div className="record-grid">
-        {limit ? cards.slice(shown * limit, (shown + 1) * limit) : cards}
+      <div className="record-grid" role="list">
+        {(limit ? cards.slice(shown * limit, (shown + 1) * limit) : cards).map(
+          (card) => (
+            <div className="record-item" role="listitem" key={card.key}>
+              {card}
+            </div>
+          ),
+        )}
       </div>
       {last > 0 && (
         <div
@@ -376,20 +450,29 @@ export function RecordCard({
   onOpen,
   selected = false,
   children,
+  className = "",
+  ref,
+  tabIndex,
 }) {
   return (
     <article
-      className={`record-card tone-${tone}${selected ? " is-selected" : ""}`}
+      className={`record-card tone-${tone}${selected ? " is-selected" : ""} ${className}`}
+      ref={ref}
+      tabIndex={tabIndex}
     >
-      {Icon && (
-        <span className="record-icon">
-          <Icon size={21} aria-hidden="true" />
-        </span>
-      )}
-      {eyebrow && <span className="record-eyebrow">{eyebrow}</span>}
-      <h3>{title}</h3>
-      {detail && <p className="record-detail">{detail}</p>}
-      {children}
+      <div className="record-identity">
+        {Icon && (
+          <span className="record-icon">
+            <Icon size={21} aria-hidden="true" />
+          </span>
+        )}
+        <div className="record-title">
+          {eyebrow && <span className="record-eyebrow">{eyebrow}</span>}
+          <h3>{title}</h3>
+          {detail && <p className="record-detail">{detail}</p>}
+        </div>
+      </div>
+      {children != null && <div className="record-content">{children}</div>}
       {action && (
         <button
           type="button"
