@@ -25,11 +25,9 @@ test("avaliação valida datas, preserva edição, registra correção e pode se
     .getByLabel("Prazo de entrega ou data da prova")
     .fill("2026-11-28T08:00");
   await page.getByRole("button", { name: "Salvar avaliação" }).click();
-  const card = page
-    .getByRole("article")
-    .filter({
-      has: page.getByRole("heading", { name: "Prova de álgebra", exact: true }),
-    });
+  const card = page.getByRole("article").filter({
+    has: page.getByRole("heading", { name: "Prova de álgebra", exact: true }),
+  });
   await card.getByRole("button", { name: "Abrir avaliação" }).click();
   await page
     .getByLabel("Nota de Ana Clara Martins", { exact: true })

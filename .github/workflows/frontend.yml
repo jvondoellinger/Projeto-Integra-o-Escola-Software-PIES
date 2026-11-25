@@ -1,7 +1,7 @@
 name: Frontend
 on:
   push:
-    branches: [main, feat/privacidade-e-qualidade]
+    branches: [main, feat/portal-aluno-e-alertas]
   pull_request:
 permissions:
   contents: read

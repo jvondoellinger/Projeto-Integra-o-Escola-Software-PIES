@@ -60,7 +60,7 @@ export function AssignmentForm({
       id: assignment?.id || crypto.randomUUID(),
       title: d.title.trim(),
       instructions: d.instructions.trim(),
-      kind: d.kind,
+      kind: hasSubmissions ? assignment.kind : d.kind,
       classroom: hasSubmissions ? assignment.classroom : d.classroom,
       content: d.content,
       publishedAt,
@@ -98,13 +98,17 @@ export function AssignmentForm({
             <option>8º ano B</option>
           </select>
           {hasSubmissions && (
-            <small>A turma é preservada porque já existem entregas.</small>
+            <small>
+              A turma, o formato e a publicação são preservados porque já há
+              registros de alunos.
+            </small>
           )}
         </label>
         <label>
           Formato
           <select
             name="kind"
+            disabled={hasSubmissions}
             defaultValue={assignment?.kind || "Atividade de casa"}
           >
             {kinds.map((k) => (
@@ -128,6 +132,7 @@ export function AssignmentForm({
           <input
             type="datetime-local"
             name="publishedAt"
+            readOnly={hasSubmissions}
             required
             defaultValue={dateInput(
               assignment?.publishedAt || Date.now() - 60000,
@@ -225,7 +230,7 @@ function ReviewRow({ a, student: s, school, update, toast }) {
           </p>
         )}
       </div>
-      {submission?.text && (
+      {submission?.submittedAt && submission?.text && (
         <div className="submitted-text">
           <strong>Resposta do aluno</strong>
           <p>{submission.text}</p>
@@ -311,6 +316,11 @@ export default function Assignments({
     update((current) => ({
       ...current,
       assignments: [...current.assignments.filter((x) => x.id !== a.id), a],
+      grades: current.grades.map((g) =>
+        g.id.startsWith(`assignment-${a.id}-`)
+          ? { ...g, title: a.title, content: a.content }
+          : g,
+      ),
     }));
     setEditing(undefined);
     toast("Avaliação salva. Publicação, prazo e lembretes atualizados.");
@@ -343,7 +353,7 @@ export default function Assignments({
           key={editing?.id || "new"}
           assignment={editing}
           hasSubmissions={school.submissions.some(
-            (s) => s.assignmentId === editing?.id && s.submittedAt,
+            (s) => s.assignmentId === editing?.id,
           )}
           onSave={save}
           onCancel={() => setEditing(undefined)}

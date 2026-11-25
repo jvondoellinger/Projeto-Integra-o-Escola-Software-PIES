@@ -475,7 +475,7 @@ export function Pages({
   if (page === "Turmas")
     return (
       <section className="cards">
-        {["8º ano A", "8º ano B"].map((c) => (
+        {[...new Set(filtered.map((s) => s.classroom))].map((c) => (
           <article className="panel class-card" key={c}>
             <span className="class-icon">
               <BookOpen />
@@ -486,17 +486,17 @@ export function Pages({
             <div className="class-metrics">
               <div>
                 <strong>
-                  {students.filter((s) => s.classroom === c).length}
+                  {filtered.filter((s) => s.classroom === c).length}
                 </strong>
                 <small>Alunos</small>
               </div>
               <div>
                 <strong>
                   {number(
-                    students
+                    filtered
                       .filter((s) => s.classroom === c)
                       .reduce((a, s) => a + s.average, 0) /
-                      students.filter((s) => s.classroom === c).length,
+                      filtered.filter((s) => s.classroom === c).length,
                   )}
                 </strong>
                 <small>Média</small>

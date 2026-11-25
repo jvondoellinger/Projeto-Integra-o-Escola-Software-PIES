@@ -206,7 +206,7 @@ export function assignmentStatus(a, now) {
     ? "Arquivada"
     : Date.parse(a.publishedAt) > now
       ? "Agendada"
-      : Date.parse(a.dueAt) < now
+      : Date.parse(a.dueAt) <= now
         ? "Prazo encerrado"
         : "Em andamento";
 }
