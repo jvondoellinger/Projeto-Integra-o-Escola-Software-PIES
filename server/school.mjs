@@ -207,7 +207,7 @@ function outcome(s, c, p, studentId) {
     ],
   };
 }
-function report(s, c, p) {
+export function report(s, c, p) {
   return enrolledIn(s, c.id, p.start, p.end).map((id) => outcome(s, c, p, id));
 }
 function ensureOpenRoster(s, classId, start, end) {

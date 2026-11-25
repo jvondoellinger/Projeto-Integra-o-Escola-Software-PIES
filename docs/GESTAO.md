@@ -8,6 +8,8 @@ npm run build
 npm start
 ```
 
+Para explorar as duas unidades do Colégio Horizonte, use `npm run build` e `npm run start:preview`. O comando usa um banco separado, atende apenas neste dispositivo e abre seis perfis predefinidos pelo botão de acesso ou pelo e-mail com qualquer senha. `npm start` usa a autenticação normal. Os registros da prévia ficam em `.pies/horizonte-previa-v3.sqlite`.
+
 Para criar a primeira escola, defina `PIES_INITIAL_PASSWORD` no ambiente do comando `npm run provision` e passe na entrada padrão um JSON com `name`, `network` e `email`. A conta inicial usa o perfil de secretaria. Para provisionar a gestão de rede, passe `school`, `name`, `email` e `role` com o valor `rede`. A secretaria cria e suspende as outras contas, vincula alunos e responsáveis, matricula e registra movimentações. Use um banco separado e `npm run sample` para carregar o Colégio Horizonte com os seis perfis de avaliação.
 
 `PIES_DB` aponta para o arquivo SQLite, que deve ficar em armazenamento persistente e com acesso restrito. O padrão é `.pies/escola.sqlite`. `PIES_HOST` e `PIES_PORT` configuram o servidor. Atrás de um proxy HTTPS, use `PIES_SECURE_COOKIE=1` e preserve o cabeçalho Host. Para e-mail, configure `PIES_SMTP_URL`, `PIES_MAIL_FROM` e `PIES_PUBLIC_URL` com HTTPS. Os e-mails incluem apenas o link e o nome da escola. A fila roda no servidor e tem tentativas de reenvio. Os alertas do painel funcionam sem SMTP.

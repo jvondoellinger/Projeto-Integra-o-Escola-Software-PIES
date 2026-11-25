@@ -11,6 +11,7 @@ import {
 } from "./store.mjs";
 import { perform, readWorkspace, scopedExtras } from "./school.mjs";
 import { notifications, startMailWorker } from "./notifications.mjs";
+import { previewMode, previewProfiles } from "./preview-mode.mjs";
 const workspace = (user, id) => {
   const state = scopedExtras(user, readWorkspace(user, id || user.school));
   return { ...state, notifications: notifications(user, state) };
@@ -79,6 +80,13 @@ export const server = createServer(async (req, res) => {
   );
   try {
     const url = new URL(req.url, "http://localhost");
+    if (previewMode) {
+      insist(
+        /^(127\.0\.0\.1|localhost)(:\d+)?$/.test(req.headers.host || ""),
+        "A prévia está disponível neste dispositivo.",
+        403,
+      );
+    }
     if (url.pathname.startsWith("/api/")) {
       if (req.method === "POST") origin(req);
       if (url.pathname === "/api/login" && req.method === "POST") {
@@ -95,14 +103,24 @@ export const server = createServer(async (req, res) => {
         insist(limit.count < 15, "Muitas tentativas. Aguarde um minuto.", 429);
         limit.count++;
         attempts.set(key, limit);
-        const access = login(email, password);
+        const skipPassword =
+          previewMode &&
+          typeof email === "string" &&
+          previewProfiles.some(
+            (profile) => profile.email === email.trim().toLowerCase(),
+          );
+        const access = login(email, password, { skipPassword });
         attempts.delete(key);
         res.setHeader("Set-Cookie", cookie(access.token));
         return json(res, 200, { user: access.user });
       }
       const user = session(token(req));
       if (!user && url.pathname === "/api/workspace" && req.method === "GET")
-        return json(res, 200, { user: null, state: null });
+        return json(res, 200, {
+          user: null,
+          state: null,
+          profiles: previewMode ? previewProfiles : [],
+        });
       insist(user, "Entre com sua conta escolar.", 401);
       if (url.pathname === "/api/logout" && req.method === "POST") {
         logout(token(req));
@@ -119,6 +137,7 @@ export const server = createServer(async (req, res) => {
         return json(res, 200, {
           user: publicUser(user),
           state: workspace(user, url.searchParams.get("school")),
+          profiles: previewMode ? previewProfiles : [],
         });
       if (url.pathname === "/api/command" && req.method === "POST") {
         const d = await body(req);
@@ -170,7 +189,7 @@ export const server = createServer(async (req, res) => {
     else res.end();
   }
 });
-startMailWorker();
+if (!previewMode) startMailWorker();
 server.listen(
   Number(process.env.PIES_PORT || 4173),
   process.env.PIES_HOST || "127.0.0.1",
