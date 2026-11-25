@@ -91,8 +91,8 @@ export function CookieDialog({ open, onClose, consent, onSave }) {
         <div>
           <strong>Essenciais</strong>
           <p>
-            Planos e registros na sessão; sua escolha de privacidade por até 180
-            dias.
+            Dados escolares neste navegador; sua escolha de privacidade por até
+            180 dias.
           </p>
         </div>
         <span className="badge green">Sempre ativos</span>
@@ -196,13 +196,13 @@ export function PrivacyPage({
         <hr />
         <h2>Dados deste navegador</h2>
         <p>
-          Limpar remove os planos adicionados, avaliações e registros desta
-          sessão. Os dados iniciais serão restaurados. Não há exclusão em
-          servidores.
+          Limpar remove avaliações, entregas, notas, planos e registros
+          adicionados neste navegador. Os dados iniciais serão restaurados. Não
+          há exclusão em servidores.
         </p>
         <button className="button secondary" onClick={clearSession}>
           <Trash2 size={16} />
-          Limpar dados da sessão
+          Limpar dados deste navegador
         </button>
       </section>
     );
@@ -235,11 +235,11 @@ export function PrivacyPage({
         </p>
         <h3>Limites desta aplicação</h3>
         <p>
-          Os registros de trabalho ficam na sessão deste navegador. Não há
-          autenticação, sincronização entre dispositivos ou envio de
-          solicitações. Fechar a sessão ou limpar o armazenamento pode remover
-          alterações. O acesso a esta interface não comprova autorização
-          institucional.
+          Avaliações, entregas e notas ficam neste navegador até a limpeza
+          manual. Planos e observações ficam na sessão. Não há autenticação,
+          sincronização entre dispositivos ou envio de solicitações. Fechar a
+          sessão ou limpar o armazenamento pode remover alterações. O acesso a
+          esta interface não comprova autorização institucional.
         </p>
         <h3>Antes do uso institucional</h3>
         <p>
@@ -272,18 +272,20 @@ export function PrivacyPage({
         </p>
         <h3>Onde as informações ficam</h3>
         <p>
-          Os planos, avaliações e registros criados aqui ficam no armazenamento
-          da sessão do navegador. Não são enviados a um servidor pela aplicação.
-          Exportações são arquivos locais. Quem usa um dispositivo compartilhado
-          deve limpar a sessão ao terminar.
+          Avaliações, entregas e notas ficam no armazenamento local deste
+          navegador até a limpeza manual. Planos e observações ficam no
+          armazenamento da sessão. Não são enviados a um servidor pela
+          aplicação. Exportações são arquivos locais. Quem usa um dispositivo
+          compartilhado deve limpar a sessão ao terminar.
         </p>
         <h3>Cookies e tecnologias semelhantes</h3>
         <p>
           Não criamos cookies HTTP nem utilizamos publicidade ou rastreamento.
-          Usamos sessionStorage para os registros de trabalho e localStorage
-          para lembrar sua escolha de privacidade por até 180 dias. Se você
-          permitir, localStorage também guarda as preferências de visualização.
-          É possível revogar essa permissão a qualquer momento.
+          Usamos sessionStorage para planos e observações e localStorage para
+          avaliações, entregas, notas e para lembrar sua escolha de privacidade
+          por até 180 dias. Se você permitir, localStorage também guarda as
+          preferências de visualização. É possível revogar essa permissão a
+          qualquer momento.
         </p>
         <button className="button secondary" onClick={openPreferences}>
           Gerenciar preferências

@@ -462,25 +462,6 @@ export function Pages({
   onClassroom,
   go,
 }) {
-  const [assessment, setAssessment] = useState(false),
-    [assessments, setAssessments] = useState(() =>
-      readSession("pies-assessments", [
-        {
-          title: "Resolução de problemas",
-          classroom: "8º ano A",
-          date: "2026-11-27",
-          content: "Álgebra",
-          type: "Atividade formativa",
-        },
-        {
-          title: "Geometria no cotidiano",
-          classroom: "8º ano B",
-          date: "2026-11-30",
-          content: "Geometria",
-          type: "Projeto em grupo",
-        },
-      ]),
-    );
   if (page === "Planos de apoio")
     return (
       <PlanList
@@ -533,91 +514,6 @@ export function Pages({
           </article>
         ))}
       </section>
-    );
-  if (page === "Avaliações")
-    return (
-      <>
-        <div className="section-actions">
-          <p>Planeje atividades que revelem como cada aluno aprende.</p>
-          <button className="button" onClick={() => setAssessment(!assessment)}>
-            <Plus size={16} />
-            Nova avaliação
-          </button>
-        </div>
-        {assessment && (
-          <form
-            className="panel form-panel"
-            onSubmit={(e) => {
-              e.preventDefault();
-              const d = Object.fromEntries(new FormData(e.currentTarget));
-              const next = [...assessments, d];
-              setAssessments(next);
-              writeSession("pies-assessments", next);
-              setAssessment(false);
-              toast("Avaliação incluída no planejamento desta sessão.");
-            }}
-          >
-            <h2>Planejar avaliação</h2>
-            <div className="form-grid">
-              <label>
-                Título
-                <input name="title" required maxLength={100} />
-              </label>
-              <label>
-                Turma
-                <select name="classroom">
-                  <option>8º ano A</option>
-                  <option>8º ano B</option>
-                </select>
-              </label>
-              <label>
-                Data
-                <input name="date" type="date" required />
-              </label>
-              <label>
-                Conteúdo
-                <input name="content" required maxLength={80} />
-              </label>
-              <label>
-                Formato
-                <select name="type">
-                  <option>Atividade formativa</option>
-                  <option>Projeto em grupo</option>
-                  <option>Avaliação individual</option>
-                </select>
-              </label>
-            </div>
-            <div className="form-actions">
-              <button
-                type="button"
-                className="button secondary"
-                onClick={() => setAssessment(false)}
-              >
-                Cancelar
-              </button>
-              <button className="button">Salvar avaliação</button>
-            </div>
-          </form>
-        )}
-        <div className="cards">
-          {assessments
-            .filter((a) => filtered.some((s) => s.classroom === a.classroom))
-            .map((a, i) => (
-              <article className="panel assessment" key={i}>
-                <ClipboardList />
-                <span className="badge blue">{a.type}</span>
-                <h2>{a.title}</h2>
-                <p>
-                  {a.classroom} · {a.content}
-                </p>
-                <div className="assessment-date">
-                  <CalendarDays size={17} />
-                  {new Date(a.date + "T12:00:00").toLocaleDateString("pt-BR")}
-                </div>
-              </article>
-            ))}
-        </div>
-      </>
     );
   if (page === "Relatórios")
     return (

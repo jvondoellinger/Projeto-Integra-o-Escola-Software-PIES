@@ -45,7 +45,9 @@ test("busca, turma, bimestre e estado vazio", async ({ page }) => {
   await page.getByLabel("Filtrar turma").selectOption("8º ano B");
   await expect(page.locator(".student-list tbody tr")).toHaveCount(3);
   await page.getByLabel("Período", { exact: true }).selectOption("1º bimestre");
-  await expect(page.locator(".student-list tbody tr").first()).toContainText("7,4");
+  await expect(page.locator(".student-list tbody tr").first()).toContainText(
+    "7,4",
+  );
   await page.getByLabel("Buscar aluno").fill("ninguém");
   await expect(
     page.getByText("Nenhum aluno encontrado.", { exact: false }),
@@ -127,12 +129,20 @@ test("planeja avaliação, exporta CSV e gera solicitação sem enviar dados", a
   await page.getByRole("button", { name: "Avaliações", exact: true }).click();
   await page.getByRole("button", { name: "Nova avaliação" }).click();
   await page.getByLabel("Título", { exact: true }).fill("Desafio de frações");
-  await page.getByLabel("Data", { exact: true }).fill("2030-12-01");
-  await page.getByLabel("Conteúdo", { exact: true }).fill("Frações");
+  await page
+    .getByLabel("Prazo de entrega ou data da prova", { exact: true })
+    .fill("2030-12-01T18:00");
+  await page
+    .getByRole("combobox", { name: "Conteúdo", exact: true })
+    .selectOption("Números e operações");
+  await page
+    .getByLabel("Orientações")
+    .fill("Resolva e apresente sua estratégia.");
   await page.getByRole("button", { name: "Salvar avaliação" }).click();
   await expect(
     page.getByRole("heading", { name: "Desafio de frações" }),
   ).toBeVisible();
+  await page.getByRole("button", { name: "Relatórios", exact: true }).click();
   const [csv] = await Promise.all([
     page.waitForEvent("download"),
     page
@@ -206,7 +216,9 @@ test("nenhum erro de execução e limpeza dos dados de sessão", async ({
       .first()
       .click();
   page.once("dialog", (d) => d.accept());
-  await page.getByRole("button", { name: "Limpar dados da sessão" }).click();
+  await page
+    .getByRole("button", { name: "Limpar dados deste navegador" })
+    .click();
   await expect(
     page.getByRole("heading", { name: "Um olhar para cada aluno." }),
   ).toBeVisible();
