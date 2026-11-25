@@ -544,22 +544,3 @@
     display: none !important;
   }
 }
-@media (max-width: 640px) {
-  .school-top > span:not(.school-pill) {
-    min-width: 0;
-    flex: 1;
-  }
-  .school-top > strong {
-    min-width: 0;
-    max-width: 32%;
-    white-space: nowrap;
-    text-overflow: ellipsis;
-    overflow: hidden;
-  }
-  .school-top > .school-pill {
-    display: none;
-  }
-  .school-top:has(> .school-pill) > strong {
-    margin-left: auto;
-  }
-}

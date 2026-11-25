@@ -1,5 +1,6 @@
 import SchoolFeed from "./SchoolFeed.jsx";
 import ContextRail from "./ContextRail.jsx";
+import MobileNavigation from "./MobileNavigation.jsx";
 import React, { useCallback, useEffect, useRef, useState } from "react";
 import { createRoot } from "react-dom/client";
 import {
@@ -14,7 +15,6 @@ import {
   Bell,
   ChartNoAxesCombined,
   LogOut,
-  Menu,
   ShieldCheck,
   ChevronRight,
   KeyRound,
@@ -198,7 +198,6 @@ function App() {
     [message, setMessage] = useState(""),
     [error, setError] = useState(""),
     [page, setPage] = useState(() => schoolRoute().page),
-    [mobile, setMobile] = useState(false),
     [pending, setPending] = useState(0),
     [focusedStudent, setFocusedStudent] = useState(null);
   const syncLock = useRef(false);
@@ -238,7 +237,6 @@ function App() {
     setRouteDetail(detail);
     setPage(id);
     location.hash = detail ? `${id}?detail=${encodeURIComponent(detail)}` : id;
-    setMobile(false);
     setError("");
     setMessage("");
     window.scrollTo(0, 0);
@@ -339,6 +337,13 @@ function App() {
   const allowed = navigation.filter((n) => !n[3] || n[3].includes(user.role));
   const current = allowed.find((n) => n[0] === page) || allowed[0];
   const [id, label] = current;
+  const initials = user.name
+    .trim()
+    .split(/\s+/)
+    .slice(0, 2)
+    .map((part) => part.charAt(0))
+    .join("")
+    .toLocaleUpperCase("pt-BR");
   function exitAction(label, className) {
     return pending ? (
       <ActionForm
@@ -469,7 +474,7 @@ function App() {
         >
           Pular para o conteúdo
         </a>
-        <aside className={mobile ? "school-side is-open" : "school-side"}>
+        <aside className="school-side">
           <Brand />
           <p className="school-unit">{state.name || "Gestão de rede"}</p>
           <nav aria-label="Áreas do PIES">
@@ -489,14 +494,10 @@ function App() {
         </aside>
         <div className="school-body">
           <header className="school-top">
-            <button
-              className="school-menu"
-              onClick={() => setMobile(!mobile)}
-              aria-expanded={mobile}
-              aria-label={mobile ? "Fechar menu" : "Abrir menu"}
-            >
-              <Menu size={22} />
-            </button>
+            <div className="school-mobile-brand">
+              <Brand />
+              <span>{state.name || "Gestão de rede"}</span>
+            </div>
             <span>
               {roles[user.role]} <ChevronRight size={14} /> {label}
             </span>
@@ -504,6 +505,15 @@ function App() {
               <span className="school-pill">Demonstração</span>
             )}
             <strong>{user.name}</strong>
+            <button
+              type="button"
+              className="school-mobile-profile"
+              aria-label={`Minha conta de ${user.name}`}
+              aria-current={id === "config" ? "page" : undefined}
+              onClick={() => open("config")}
+            >
+              {initials}
+            </button>
           </header>
           <main id="conteudo" tabIndex="-1" className="school-main">
             <header className="school-heading">
@@ -567,6 +577,13 @@ function App() {
             </div>
             <footer className="school-footer">PIES · Gestão escolar</footer>
           </main>
+          <MobileNavigation
+            areas={allowed}
+            current={id}
+            role={user.role}
+            onNavigate={open}
+            exit={exitAction("Sair", "school-secondary")}
+          />
         </div>
       </div>
     </ActionFeedback.Provider>

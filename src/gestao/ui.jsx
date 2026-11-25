@@ -17,6 +17,7 @@ export function ActionDialog({
   triggerClass = "school-primary",
   open,
   onDismiss,
+  className = "",
   children,
 }) {
   const [visible, setVisible] = useState(false);
@@ -80,7 +81,7 @@ export function ActionDialog({
       )}
       <dialog
         ref={ref}
-        className="school-dialog school-no-print"
+        className={`school-dialog school-no-print ${className}`}
         aria-labelledby={id}
         aria-busy={pending || undefined}
         onCancel={(event) => {
