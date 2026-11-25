@@ -4,15 +4,18 @@ import { number, students } from "./data.js";
 export default function PerformanceChart({
   grades,
   studentIds,
+  year = schoolYear,
+  subject = "Matemática",
+  target = 7,
   title = "Desempenho ao longo do ano",
 }) {
   const [active, setActive] = useState(10);
   const id = useId().replaceAll(":", "");
-  const series = monthlySeries(grades, studentIds);
+  const series = monthlySeries(grades, studentIds, year);
   const entries = grades.filter(
     (g) =>
       studentIds.includes(g.studentId) &&
-      g.date.startsWith(`${schoolYear}-${String(active + 1).padStart(2, "0")}`),
+      g.date.startsWith(`${year}-${String(active + 1).padStart(2, "0")}`),
   );
   const available = series
     .map((v, i) => (v === null ? null : i))
@@ -35,9 +38,11 @@ export default function PerformanceChart({
       <div className="section-title">
         <div>
           <h2>{title}</h2>
-          <p>Matemática · {schoolYear} · médias das avaliações registradas</p>
+          <p>
+            {subject} · {year} · médias das avaliações registradas
+          </p>
         </div>
-        <span className="badge blue">Meta: 7,0</span>
+        <span className="badge blue">Meta: {number(target)}</span>
       </div>
       <div className="performance-summary">
         <div>
@@ -48,7 +53,7 @@ export default function PerformanceChart({
                   .filter(
                     (g) =>
                       studentIds.includes(g.studentId) &&
-                      g.date.startsWith(String(schoolYear)),
+                      g.date.startsWith(String(year)),
                   )
                   .map((g) => g.score),
               ),
@@ -101,8 +106,8 @@ export default function PerformanceChart({
           <line
             x1="40"
             x2="690"
-            y1={y(7)}
-            y2={y(7)}
+            y1={y(target)}
+            y2={y(target)}
             stroke="#a57a27"
             strokeDasharray="6 4"
           />
@@ -156,7 +161,7 @@ export default function PerformanceChart({
       </div>
       <div className="month-detail" aria-live="polite">
         <strong>
-          {months[active]} de {schoolYear}:{" "}
+          {months[active]} de {year}:{" "}
           {series[active] === null
             ? "sem avaliações registradas"
             : `média ${number(series[active])}`}
