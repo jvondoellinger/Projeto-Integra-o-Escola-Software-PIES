@@ -1,8 +1,11 @@
 import React, { useState, useEffect } from "react";
+import StudentPortal from "./StudentPortal.jsx";
+import AlertsPanel from "./AlertsPanel.jsx";
+import { buildAlerts, useSchoolClock } from "./alerts.js";
 import Assignments from "./Assignments.jsx";
 import { useSchool } from "./school.js";
 import PerformanceChart from "./PerformanceChart.jsx";
-import { seedGrades, studentMetrics, mean as gradeMean } from "./learning.js";
+import { studentMetrics, mean as gradeMean } from "./learning.js";
 import { readRoute, pushRoute } from "./routes.js";
 import { createRoot } from "react-dom/client";
 import {
@@ -58,7 +61,26 @@ const nav = [
   ["Planos de apoio", HeartHandshake],
   ["Relatórios", ChartNoAxesCombined],
 ];
+const studentNav = [
+  ["Meu painel", LayoutDashboard],
+  ["Minhas atividades", ClipboardList],
+  ["Meu desempenho", ChartNoAxesCombined],
+  ["Conteúdos de apoio", BookOpen],
+  ["Alertas", Bell],
+];
 function App() {
+  const [role, setRole] = useState(() => readRoute().role),
+    [actorId, setActorId] = useState(() => readRoute().actorId);
+  const actor = students.find((s) => s.id === actorId) || students[0];
+  const now = useSchoolClock();
+  const navigate = (
+    p,
+    student = null,
+    evaluation = null,
+    view = role,
+    actorValue = actorId,
+  ) => pushRoute(p, student, { evaluation, view, actor: actorValue });
+
   const {
     school,
     update: updateSchool,
@@ -118,6 +140,8 @@ function App() {
   useEffect(() => {
     const restore = () => {
       const route = readRoute();
+      setRole(route.role);
+      setActorId(route.actorId);
       setPage(route.page);
       setSelected(route.student);
       setOpenId(route.evaluation);
@@ -128,7 +152,7 @@ function App() {
   }, []);
   const selectStudent = (student) => {
     setSelected(student);
-    pushRoute(page, student);
+    navigate(page, student);
   };
   const clearSession = () => {
     if (
@@ -169,7 +193,7 @@ function App() {
       s.name.toLowerCase().includes(query.toLowerCase()),
   );
   const go = (p) => {
-    pushRoute(p === "Preferências de cookies" ? "Privacidade" : p);
+    navigate(p === "Preferências de cookies" ? "Privacidade" : p);
     setPage(p);
     setSelected(null);
     setOpenId(null);
@@ -181,29 +205,48 @@ function App() {
     }
   };
   const openAssignment = (id) => {
-    setPage("Avaliações");
+    const destination = role === "student" ? "Minhas atividades" : "Avaliações";
+    setPage(destination);
     setSelected(null);
     setOpenId(id);
-    pushRoute("Avaliações", null, { evaluation: id });
+    navigate(destination, null, id);
   };
+  const changeView = (view, studentId = actorId) => {
+    setRole(view);
+    setActorId(studentId);
+    setSelected(null);
+    setOpenId(null);
+    setMenu(false);
+    const destination = view === "student" ? "Meu painel" : "Visão geral";
+    setPage(destination);
+    navigate(destination, null, null, view, studentId);
+  };
+  const alerts = buildAlerts(school, {
+    role,
+    studentId: actor.id,
+    classroom,
+    now,
+  });
   const toast = (t) => {
     setNotice(t);
     setTimeout(() => setNotice(""), 4500);
   };
   function exportReport(onlySupport = false) {
     const report = selected
-      ? [selected]
+      ? [studentMetrics(selected, grades, periodIndex)]
       : onlySupport === true
         ? filtered.filter((s) => status(s) === "Precisa de apoio")
         : filtered;
     const rows = [
-      ["Aluno", "Turma", "Média", "Frequência", "Situação"],
+      ["Aluno", "Turma", "Média", "Frequência", "Situação", "Período", "Ano"],
       ...report.map((s) => [
         s.name,
         s.classroom,
         number(s.average),
         s.attendance + "%",
         status(s),
+        period,
+        "2026",
       ]),
     ];
     const blob = new Blob(
@@ -244,12 +287,15 @@ function App() {
             <BookOpen size={19} />
           </span>
           <div>
-            Colégio Horizonte<small>Espaço do professor</small>
+            Colégio Horizonte
+            <small>
+              {role === "teacher" ? "Espaço do professor" : "Espaço do aluno"}
+            </small>
           </div>
         </div>
         <p className="nav-label">ACOMPANHAMENTO</p>
         <nav>
-          {nav.map(([label, Icon]) => (
+          {(role === "teacher" ? nav : studentNav).map(([label, Icon]) => (
             <button
               key={label}
               onClick={() => go(label)}
@@ -289,10 +335,18 @@ function App() {
             Configurações
           </button>
           <div className="user">
-            <span className="avatar teacher">MC</span>
+            <span className="avatar teacher">
+              {role === "teacher" ? "MC" : initials(actor.name)}
+            </span>
             <div>
-              <strong>Mariana Carvalho</strong>
-              <small>Professora · Matemática</small>
+              <strong>
+                {role === "teacher" ? "Mariana Carvalho" : actor.name}
+              </strong>
+              <small>
+                {role === "teacher"
+                  ? "Professora · Matemática"
+                  : actor.classroom + " · Matemática"}
+              </small>
             </div>
           </div>
         </div>
@@ -307,7 +361,8 @@ function App() {
             <Menu />
           </button>
           <div className="breadcrumb">
-            Espaço do professor <ChevronRight size={14} />
+            {role === "teacher" ? "Espaço do professor" : "Espaço do aluno"}{" "}
+            <ChevronRight size={14} />
             <strong>{selected ? "Perfil do aluno" : page}</strong>
           </div>
           <div className="top-actions">
@@ -321,30 +376,77 @@ function App() {
               onClick={() => go("Alertas")}
             >
               <Bell size={20} />
-              <i />
+              {alerts.length > 0 && (
+                <span className="bell-count">{alerts.length}</span>
+              )}
             </button>
-            <span className="avatar teacher small">MC</span>
+            <span className="avatar teacher small">
+              {role === "teacher" ? "MC" : initials(actor.name)}
+            </span>
           </div>
         </header>
         <main id="main" tabIndex="-1">
+          <div className="identity-controls">
+            <label>
+              Área
+              <select
+                aria-label="Área"
+                value={role}
+                onChange={(e) => changeView(e.target.value)}
+              >
+                <option value="teacher">Professor</option>
+                <option value="student">Aluno</option>
+              </select>
+            </label>
+            {role === "student" && (
+              <label>
+                Aluno
+                <select
+                  aria-label="Aluno"
+                  value={actor.id}
+                  onChange={(e) =>
+                    changeView("student", Number(e.target.value))
+                  }
+                >
+                  {students.map((s) => (
+                    <option value={s.id} key={s.id}>
+                      {s.name} · {s.classroom}
+                    </option>
+                  ))}
+                </select>
+              </label>
+            )}
+            <span>
+              {role === "teacher"
+                ? "Acompanhamento pedagógico e gestão de entregas."
+                : actor.name +
+                  " · sua agenda, seus resultados e seus próximos passos."}
+            </span>
+          </div>
+
           <div className="page-heading">
             <div>
               <div className="eyebrow">PEDAGOGIA COM PROPÓSITO</div>
               <h1>
                 {selected
                   ? selected.name
-                  : page === "Visão geral"
-                    ? "Um olhar para cada aluno."
-                    : page}
+                  : page === "Meu painel"
+                    ? "Seu próximo passo começa aqui."
+                    : page === "Visão geral"
+                      ? "Um olhar para cada aluno."
+                      : page}
               </h1>
               <p>
-                {selected
-                  ? "Aprendizagem, potencialidades e próximos passos."
-                  : "Acompanhe trajetórias, reconheça conquistas e transforme o apoio em evolução."}
+                {role === "student"
+                  ? "Organize suas atividades e acompanhe o que você já aprendeu."
+                  : selected
+                    ? "Aprendizagem, potencialidades e próximos passos."
+                    : "Acompanhe trajetórias, reconheça conquistas e transforme o apoio em evolução."}
               </p>
             </div>
-            {["Visão geral", "Meus alunos", "Relatórios"].includes(page) ||
-            selected ? (
+            {role === "teacher" &&
+            (["Visão geral", "Meus alunos", "Relatórios"].includes(page) ||
+              selected) ? (
               <button
                 className="button secondary"
                 onClick={() => exportReport()}
@@ -354,7 +456,8 @@ function App() {
               </button>
             ) : null}
           </div>
-          {!selected &&
+          {role === "teacher" &&
+            !selected &&
             [
               "Visão geral",
               "Meus alunos",
@@ -377,7 +480,12 @@ function App() {
                     ))}
                   </select>
                 </div>
-                {page !== "Avaliações" && (
+                {[
+                  "Visão geral",
+                  "Meus alunos",
+                  "Turmas",
+                  "Relatórios",
+                ].includes(page) && (
                   <div className="filter-select">
                     <CalendarDays size={17} />
                     <select
@@ -399,10 +507,33 @@ function App() {
                 <span className="filter-context">
                   {filtered.length} alunos · Matemática
                 </span>
-                <span className="updated">Referência: novembro de 2026</span>
+                {[
+                  "Visão geral",
+                  "Meus alunos",
+                  "Turmas",
+                  "Relatórios",
+                ].includes(page) && (
+                  <span className="updated">
+                    Resultados de 2026 · Matemática
+                  </span>
+                )}
               </div>
             )}
-          {selected ? (
+          {role === "student" &&
+          !["Privacidade", "Termos de uso", "Configurações"].includes(page) ? (
+            <StudentPortal
+              key={actor.id}
+              student={actor}
+              school={school}
+              update={updateSchool}
+              page={page}
+              now={now}
+              alerts={alerts}
+              onOpen={openAssignment}
+              openId={openId}
+              toast={toast}
+            />
+          ) : selected ? (
             <Profile
               key={selected.id}
               student={studentMetrics(selected, grades, periodIndex)}
@@ -414,6 +545,13 @@ function App() {
             />
           ) : (
             <>
+              {["Visão geral", "Alertas"].includes(page) && (
+                <AlertsPanel
+                  alerts={alerts}
+                  onOpen={openAssignment}
+                  compact={page === "Visão geral"}
+                />
+              )}
               {page === "Visão geral" && (
                 <>
                   <section className="stats" aria-label="Indicadores da turma">
@@ -529,7 +667,7 @@ function App() {
                         <tr>
                           <th>Aluno</th>
                           <th>Turma</th>
-                          <th>Média atual</th>
+                          <th>Média do bimestre</th>
                           <th>Evolução</th>
                           <th>Frequência atual</th>
                           <th>Acompanhamento</th>
@@ -631,6 +769,7 @@ function App() {
                   toast={toast}
                   openId={openId}
                   onOpen={openAssignment}
+                  now={now}
                 />
               ) : ["Privacidade", "Termos de uso", "Configurações"].includes(
                   page,

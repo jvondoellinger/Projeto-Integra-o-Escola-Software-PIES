@@ -1,6 +1,6 @@
 import React, { useState, useId } from "react";
 import { months, schoolYear, monthlySeries, mean } from "./learning.js";
-import { number } from "./data.js";
+import { number, students } from "./data.js";
 export default function PerformanceChart({
   grades,
   studentIds,
@@ -63,7 +63,12 @@ export default function PerformanceChart({
           <span>Primeiro ao último mês avaliado</span>
         </div>
       </div>
-      <div className="annual-scroll">
+      <div
+        className="annual-scroll"
+        tabIndex="0"
+        role="region"
+        aria-label="Gráfico anual; role horizontalmente para consultar todos os meses"
+      >
         <svg
           viewBox="0 0 720 260"
           role="img"
@@ -169,6 +174,7 @@ export default function PerformanceChart({
             <thead>
               <tr>
                 <th>Data</th>
+                {studentIds.length > 1 && <th>Aluno</th>}
                 <th>Avaliação</th>
                 <th>Nota</th>
               </tr>
@@ -179,6 +185,9 @@ export default function PerformanceChart({
                   <td>
                     {new Date(g.date + "T12:00:00").toLocaleDateString("pt-BR")}
                   </td>
+                  {studentIds.length > 1 && (
+                    <td>{students.find((s) => s.id === g.studentId)?.name}</td>
+                  )}
                   <td>{g.title}</td>
                   <td>{number(g.score)}</td>
                 </tr>
