@@ -17,13 +17,15 @@ export function readRoute() {
     page: pages.includes(params.get("page"))
       ? params.get("page")
       : "Visão geral",
+    evaluation: params.get("evaluation"),
     student:
       students.find((s) => s.id === Number(params.get("student"))) || null,
   };
 }
-export function pushRoute(page, student = null) {
+export function pushRoute(page, student = null, extra = {}) {
   const params = new URLSearchParams({ page });
   if (student) params.set("student", student.id);
+  if (extra.evaluation) params.set("evaluation", extra.evaluation);
   history.pushState(
     {},
     "",

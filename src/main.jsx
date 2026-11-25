@@ -1,4 +1,6 @@
 import React, { useState, useEffect } from "react";
+import Assignments from "./Assignments.jsx";
+import { useSchool } from "./school.js";
 import PerformanceChart from "./PerformanceChart.jsx";
 import { seedGrades, studentMetrics, mean as gradeMean } from "./learning.js";
 import { readRoute, pushRoute } from "./routes.js";
@@ -56,11 +58,14 @@ const nav = [
   ["Planos de apoio", HeartHandshake],
   ["Relatórios", ChartNoAxesCombined],
 ];
-const initialGrades = seedGrades(students);
 function App() {
-  const [grades, setGrades] = useState(() =>
-    readSession("pies-grades", initialGrades),
-  );
+  const {
+    school,
+    update: updateSchool,
+    reset: resetSchool,
+  } = useSchool((message) => toast(message));
+  const grades = school.grades;
+  const [openId, setOpenId] = useState(() => readRoute().evaluation);
   const [page, setPage] = useState(() => readRoute().page),
     [query, setQuery] = useState(""),
     [classroom, setClassroom] = useState("Todas as turmas"),
@@ -115,6 +120,7 @@ function App() {
       const route = readRoute();
       setPage(route.page);
       setSelected(route.student);
+      setOpenId(route.evaluation);
       setMenu(false);
     };
     window.addEventListener("popstate", restore);
@@ -127,7 +133,7 @@ function App() {
   const clearSession = () => {
     if (
       !window.confirm(
-        "Limpar os planos, avaliações e registros desta sessão e restaurar os dados iniciais?",
+        "Limpar os dados escolares deste navegador e restaurar os registros iniciais?",
       )
     )
       return;
@@ -137,8 +143,9 @@ function App() {
         .forEach((k) => sessionStorage.removeItem(k));
     } catch {}
     updatePlans(initialPlans);
+    resetSchool();
     go("Visão geral");
-    toast("Dados de trabalho desta sessão removidos.");
+    toast("Dados escolares deste navegador removidos.");
   };
   const [plans, updatePlans] = useState(() =>
     readSession("pies-plans", initialPlans),
@@ -165,12 +172,19 @@ function App() {
     pushRoute(p === "Preferências de cookies" ? "Privacidade" : p);
     setPage(p);
     setSelected(null);
+    setOpenId(null);
     setMenu(false);
     setQuery("");
     if (p === "Preferências de cookies") {
       setPage("Privacidade");
       setCookieOpen(true);
     }
+  };
+  const openAssignment = (id) => {
+    setPage("Avaliações");
+    setSelected(null);
+    setOpenId(id);
+    pushRoute("Avaliações", null, { evaluation: id });
   };
   const toast = (t) => {
     setNotice(t);
@@ -329,48 +343,65 @@ function App() {
                   : "Acompanhe trajetórias, reconheça conquistas e transforme o apoio em evolução."}
               </p>
             </div>
-            <button className="button secondary" onClick={() => exportReport()}>
-              <Download size={17} />
-              Exportar relatório
-            </button>
+            {["Visão geral", "Meus alunos", "Relatórios"].includes(page) ||
+            selected ? (
+              <button
+                className="button secondary"
+                onClick={() => exportReport()}
+              >
+                <Download size={17} />
+                Exportar relatório
+              </button>
+            ) : null}
           </div>
-          {!selected && (
-            <div className="filters">
-              <div className="filter-select">
-                <BookOpen size={17} />
-                <select
-                  aria-label="Filtrar turma"
-                  value={classroom}
-                  onChange={(e) => setClassroom(e.target.value)}
-                >
-                  {["Todas as turmas", "8º ano A", "8º ano B"].map((x) => (
-                    <option key={x}>{x}</option>
-                  ))}
-                </select>
+          {!selected &&
+            [
+              "Visão geral",
+              "Meus alunos",
+              "Turmas",
+              "Avaliações",
+              "Planos de apoio",
+              "Relatórios",
+              "Alertas",
+            ].includes(page) && (
+              <div className="filters">
+                <div className="filter-select">
+                  <BookOpen size={17} />
+                  <select
+                    aria-label="Filtrar turma"
+                    value={classroom}
+                    onChange={(e) => setClassroom(e.target.value)}
+                  >
+                    {["Todas as turmas", "8º ano A", "8º ano B"].map((x) => (
+                      <option key={x}>{x}</option>
+                    ))}
+                  </select>
+                </div>
+                {page !== "Avaliações" && (
+                  <div className="filter-select">
+                    <CalendarDays size={17} />
+                    <select
+                      aria-label="Período"
+                      value={period}
+                      onChange={(e) => setPeriod(e.target.value)}
+                    >
+                      {[
+                        "4º bimestre",
+                        "3º bimestre",
+                        "2º bimestre",
+                        "1º bimestre",
+                      ].map((x) => (
+                        <option key={x}>{x}</option>
+                      ))}
+                    </select>
+                  </div>
+                )}
+                <span className="filter-context">
+                  {filtered.length} alunos · Matemática
+                </span>
+                <span className="updated">Referência: novembro de 2026</span>
               </div>
-              <div className="filter-select">
-                <CalendarDays size={17} />
-                <select
-                  aria-label="Período"
-                  value={period}
-                  onChange={(e) => setPeriod(e.target.value)}
-                >
-                  {[
-                    "4º bimestre",
-                    "3º bimestre",
-                    "2º bimestre",
-                    "1º bimestre",
-                  ].map((x) => (
-                    <option key={x}>{x}</option>
-                  ))}
-                </select>
-              </div>
-              <span className="filter-context">
-                {filtered.length} alunos · Matemática
-              </span>
-              <span className="updated">Referência: novembro de 2026</span>
-            </div>
-          )}
+            )}
           {selected ? (
             <Profile
               key={selected.id}
@@ -592,6 +623,15 @@ function App() {
                     <span>{filtered.length} alunos</span>
                   </div>
                 </section>
+              ) : page === "Avaliações" ? (
+                <Assignments
+                  school={school}
+                  update={updateSchool}
+                  classroom={classroom}
+                  toast={toast}
+                  openId={openId}
+                  onOpen={openAssignment}
+                />
               ) : ["Privacidade", "Termos de uso", "Configurações"].includes(
                   page,
                 ) ? (
