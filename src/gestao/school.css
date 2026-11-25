@@ -163,9 +163,14 @@ a {
   margin: auto;
 }
 .school-heading {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 12px 20px;
   margin: 0 0 24px;
 }
-.school-heading > span {
+.school-heading-title > span {
   display: block;
   font-size: 0.78rem;
   font-weight: 700;
@@ -173,6 +178,33 @@ a {
   text-transform: uppercase;
   color: #405172;
   margin-bottom: 6px;
+}
+.record-layout-picker {
+  display: inline-flex;
+  flex-shrink: 0;
+  gap: 3px;
+  padding: 3px;
+  border: 1px solid #d1def1;
+  border-radius: 11px;
+  background: #f8fbff;
+}
+.record-layout-picker button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  min-height: 42px;
+  padding: 6px 10px;
+  border: 1px solid transparent;
+  background: transparent;
+  color: #375579;
+  font-size: 0.83rem;
+  font-weight: 700;
+}
+.record-layout-picker button[aria-pressed="true"] {
+  border-color: #b2cdef;
+  background: #e4f0ff;
+  color: #173c74;
 }
 .school-panel,
 .performance {
@@ -904,6 +936,15 @@ body:has(.school-dialog[open]) .school-page-error {
   gap: 14px;
   margin: 12px 0;
 }
+.record-item {
+  display: grid;
+  min-width: 0;
+}
+.record-identity,
+.record-title,
+.record-content {
+  display: contents;
+}
 .record-card {
   --accent-bg: #e4e9f2;
   --accent: #1b325e;
@@ -991,6 +1032,77 @@ body:has(.school-dialog[open]) .school-page-error {
   font:
     800 1.18rem Manrope,
     sans-serif;
+}
+.school-shell[data-record-layout="list"] .record-grid {
+  container: record-collection / inline-size;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 0;
+  border-block: 1px solid #dbe6f5;
+}
+.school-shell[data-record-layout="list"] .record-card {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 8px 16px;
+  justify-items: start;
+  align-items: center;
+  border: 0;
+  border-bottom: 1px solid #e1e9f5;
+  border-radius: 0;
+  padding: 11px 10px;
+  background: white;
+}
+.school-shell[data-record-layout="list"] .record-item:last-child .record-card {
+  border-bottom: 0;
+}
+.school-shell[data-record-layout="list"] .record-card.is-selected {
+  background: #eef5ff;
+}
+.school-shell[data-record-layout="list"] .record-identity {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
+}
+.school-shell[data-record-layout="list"] .record-icon {
+  flex: 0 0 32px;
+  height: 32px;
+}
+.school-shell[data-record-layout="list"] .record-icon svg {
+  width: 17px;
+  height: 17px;
+}
+.school-shell[data-record-layout="list"] .record-title,
+.school-shell[data-record-layout="list"] .record-content {
+  display: grid;
+  gap: 4px;
+  min-width: 0;
+  max-width: 100%;
+}
+.school-shell[data-record-layout="list"] .record-card h3,
+.school-shell[data-record-layout="list"] .record-content > p,
+.school-shell[data-record-layout="list"] .record-title > p,
+.school-shell[data-record-layout="list"] .record-metrics {
+  margin: 0;
+}
+.school-shell[data-record-layout="list"] .record-metrics div {
+  gap: 1px;
+}
+.school-shell[data-record-layout="list"] .record-metrics dd {
+  font-size: 0.94rem;
+}
+.school-shell[data-record-layout="list"] .record-open {
+  margin-top: 0;
+}
+@container record-collection (min-width: 480px) {
+  .school-shell[data-record-layout="list"] .record-card {
+    grid-template-columns: minmax(0, 1.15fr) minmax(0, 1fr) auto;
+  }
+  .school-shell[data-record-layout="list"] .record-content {
+    grid-column: 2;
+  }
+  .school-shell[data-record-layout="list"] .record-card > .record-open {
+    grid-column: 3;
+  }
 }
 .record-pagination {
   justify-content: center;

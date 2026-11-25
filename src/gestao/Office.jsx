@@ -247,6 +247,7 @@ export function Enrollment({ state, send }) {
             {pupil.name} · matrícula {pupil.registration}
           </h3>
           <Table
+            fixed
             columns={["Turma", "Início", "Encerramento", "Situação"]}
             rows={state.enrollments
               .filter((e) => e.studentId === pupil.id)
@@ -260,6 +261,7 @@ export function Enrollment({ state, send }) {
           />
           <h3>Resultados publicados</h3>
           <Table
+            fixed
             columns={["Turma", "Período", "Média", "Frequência"]}
             rows={state.closures.flatMap((c) =>
               (c.publicRows || [])

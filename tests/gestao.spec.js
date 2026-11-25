@@ -625,3 +625,47 @@ test("fechamento mostra turmas de todos os períodos e filtra sem seleção inic
   await expect(current).toBeVisible();
   await expect(future).toBeVisible();
 });
+
+test("visualização alterna cartões e lista sem alterar filtros e ações", async ({
+  page,
+}) => {
+  await signIn(page, "secretaria@ipe.example");
+  await go(page, "Secretaria");
+  const display = page.getByRole("group", {
+    name: "Visualização dos registros",
+  });
+  const cards = display.getByRole("button", { name: "Cartões" });
+  const list = display.getByRole("button", { name: "Lista" });
+  const search = page.getByLabel("Buscar estudante");
+  await expect(cards).toHaveAttribute("aria-pressed", "true");
+  await search.fill("Alice");
+  const alice = page.locator(".record-card").filter({
+    has: page.getByRole("heading", { name: "Alice Santos", exact: true }),
+  });
+  await expect(alice).toHaveCSS("display", "flex");
+  await list.click();
+  await expect(alice).toHaveCSS("display", "grid");
+  await expect(search).toHaveValue("Alice");
+  await alice.getByRole("button", { name: "Editar vínculos" }).click();
+  await expect(
+    page.getByRole("dialog", { name: "Editar estudante e vínculos" }),
+  ).toBeVisible();
+  await page.keyboard.press("Escape");
+  await expect(
+    alice.getByRole("button", { name: "Editar vínculos" }),
+  ).toBeFocused();
+
+  await go(page, "Visão geral");
+  await expect(list).toHaveAttribute("aria-pressed", "true");
+  await expect(page.locator(".feed-list li").first()).toHaveCSS(
+    "border-bottom-left-radius",
+    "0px",
+  );
+  await page.reload();
+  await expect(list).toHaveAttribute("aria-pressed", "true");
+  await cards.click();
+  await expect(page.locator(".feed-list li").first()).toHaveCSS(
+    "border-bottom-left-radius",
+    "10px",
+  );
+});

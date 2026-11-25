@@ -23,7 +23,16 @@ import {
 import { Accounts, Enrollment, Classes, Reports, roles } from "./Office.jsx";
 import { Diary, Evaluations, Closing, FollowUp } from "./Teaching.jsx";
 import { Calendar, Notices, Family, Activities } from "./Community.jsx";
-import { ActionFeedback, ActionForm, Field, Form, Panel } from "./ui.jsx";
+import {
+  ActionFeedback,
+  ActionForm,
+  Field,
+  Form,
+  Panel,
+  RecordLayout,
+  RecordLayoutPicker,
+  initialRecordLayout,
+} from "./ui.jsx";
 import "@fontsource/dm-sans/latin-400.css";
 import "@fontsource/dm-sans/latin-600.css";
 import "@fontsource/dm-sans/latin-700.css";
@@ -199,6 +208,7 @@ function App() {
     [page, setPage] = useState(() => schoolRoute().page),
     [pending, setPending] = useState(0),
     [focusedStudent, setFocusedStudent] = useState(null);
+  const [recordLayout, setRecordLayout] = useState(initialRecordLayout);
   const syncLock = useRef(false);
   async function load() {
     try {
@@ -466,9 +476,9 @@ function App() {
       </Panel>
     ),
   };
-  return (
+  const screen = (
     <ActionFeedback.Provider value={{ error, clearError }}>
-      <div className="school-shell">
+      <div className="school-shell" data-record-layout={recordLayout}>
         <a
           className="school-skip"
           href="#conteudo"
@@ -519,8 +529,13 @@ function App() {
           </header>
           <main id="conteudo" tabIndex="-1" className="school-main">
             <header className="school-heading">
-              <span>{state.name || "PIES · REDE DE ENSINO"}</span>
-              <h1>{headings[id] || label}</h1>
+              <div className="school-heading-title">
+                <span>{state.name || "PIES · REDE DE ENSINO"}</span>
+                <h1>{headings[id] || label}</h1>
+              </div>
+              {id !== "config" && (
+                <RecordLayoutPicker onChange={setRecordLayout} />
+              )}
             </header>
             {pending > 0 && (
               <div className="school-callout">
@@ -589,6 +604,9 @@ function App() {
         </div>
       </div>
     </ActionFeedback.Provider>
+  );
+  return (
+    <RecordLayout.Provider value={recordLayout}>{screen}</RecordLayout.Provider>
   );
 }
 createRoot(document.getElementById("root")).render(<App />);

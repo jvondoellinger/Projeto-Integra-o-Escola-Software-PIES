@@ -464,93 +464,97 @@ export function Evaluations({ state, send, initialId }) {
             title={`Correção · ${selected.title}`}
             subtitle={selected.instructions}
           >
-            {roster(state, c.id, selected.day).map((s) => {
-              const g = state.grades.find(
-                (x) => x.assessmentId === selected.id && x.studentId === s.id,
-              );
-              const submission = deliveries.find(
-                (x) => x.assessmentId === selected.id && x.studentId === s.id,
-              );
-              const deliveryStatus = submission
-                ? `Entregue em ${br(submission.submitted)}`
-                : selected.format === "Prova"
-                  ? "Prova sem entrega pelo portal"
-                  : "Nenhuma resposta enviada pelo portal";
-              return (
-                <article
-                  className="school-record"
-                  key={`${selected.id}-${s.id}`}
-                >
-                  <h3>{s.name}</h3>
-                  <p className="record-detail">{deliveryStatus}</p>
-                  {g && (
-                    <p className="record-detail school-pre">
-                      {g.score == null
-                        ? "Devolutiva"
-                        : `Nota ${grade(g.score)}`}
-                      {g.feedback && ` · ${g.feedback}`}
-                    </p>
-                  )}
-                  <ActionForm
-                    title={`Corrigir avaliação de ${s.name}`}
-                    dialogClassName="school-correction-dialog"
-                    className="school-correction-form"
-                    trigger="Lançar ou editar nota"
-                    triggerClass="school-secondary"
-                    button="Salvar correção"
-                    onSubmit={(d) =>
-                      send("grade", {
-                        ...d,
-                        studentId: s.id,
-                        assessmentId: selected.id,
-                      })
-                    }
+            <RecordCards empty="Nenhum estudante nesta avaliação.">
+              {roster(state, c.id, selected.day).map((s) => {
+                const g = state.grades.find(
+                  (x) => x.assessmentId === selected.id && x.studentId === s.id,
+                );
+                const submission = deliveries.find(
+                  (x) => x.assessmentId === selected.id && x.studentId === s.id,
+                );
+                const deliveryStatus = submission
+                  ? `Entregue em ${br(submission.submitted)}`
+                  : selected.format === "Prova"
+                    ? "Prova sem entrega pelo portal"
+                    : "Nenhuma resposta enviada pelo portal";
+                return (
+                  <RecordCard
+                    className="school-record"
+                    title={s.name}
+                    detail={deliveryStatus}
+                    key={`${selected.id}-${s.id}`}
                   >
-                    <div className="school-correction-context">
-                      <p className="school-caption">{c.name}</p>
-                      <strong>{selected.title}</strong>
-                    </div>
-                    <section className="school-correction-response">
-                      <header>
-                        <h3>Resposta do aluno</h3>
+                    {g && (
+                      <p className="record-detail school-pre">
+                        {g.score == null
+                          ? "Devolutiva"
+                          : `Nota ${grade(g.score)}`}
+                        {g.feedback && ` · ${g.feedback}`}
+                      </p>
+                    )}
+                    <ActionForm
+                      title={`Corrigir avaliação de ${s.name}`}
+                      dialogClassName="school-correction-dialog"
+                      className="school-correction-form"
+                      trigger="Lançar ou editar nota"
+                      triggerClass="school-secondary"
+                      button="Salvar correção"
+                      onSubmit={(d) =>
+                        send("grade", {
+                          ...d,
+                          studentId: s.id,
+                          assessmentId: selected.id,
+                        })
+                      }
+                    >
+                      <div className="school-correction-context">
+                        <p className="school-caption">{c.name}</p>
+                        <strong>{selected.title}</strong>
+                      </div>
+                      <section className="school-correction-response">
+                        <header>
+                          <h3>Resposta do aluno</h3>
+                          {submission && (
+                            <span className="school-pill">
+                              {deliveryStatus}
+                            </span>
+                          )}
+                        </header>
                         {submission && (
-                          <span className="school-pill">{deliveryStatus}</span>
+                          <p className="school-pre">{submission.text}</p>
                         )}
-                      </header>
-                      {submission && (
-                        <p className="school-pre">{submission.text}</p>
-                      )}
-                      {!submission && (
-                        <p className="school-caption">{deliveryStatus}</p>
-                      )}
-                    </section>
-                    <section className="school-correction-fields">
-                      <h3>Nota e devolutiva</h3>
-                      {c.stage !== "Educação Infantil" && (
+                        {!submission && (
+                          <p className="school-caption">{deliveryStatus}</p>
+                        )}
+                      </section>
+                      <section className="school-correction-fields">
+                        <h3>Nota e devolutiva</h3>
+                        {c.stage !== "Educação Infantil" && (
+                          <Field
+                            label="Nota"
+                            name="score"
+                            type="number"
+                            className="school-correction-score"
+                            min={0}
+                            max={10}
+                            step="0.01"
+                            value={g?.score ?? ""}
+                          />
+                        )}
                         <Field
-                          label="Nota"
-                          name="score"
-                          type="number"
-                          className="school-correction-score"
-                          min={0}
-                          max={10}
-                          step="0.01"
-                          value={g?.score ?? ""}
+                          label="Devolutiva"
+                          name="feedback"
+                          type="textarea"
+                          rows={5}
+                          value={g?.feedback}
+                          optional={c.stage !== "Educação Infantil"}
                         />
-                      )}
-                      <Field
-                        label="Devolutiva"
-                        name="feedback"
-                        type="textarea"
-                        rows={5}
-                        value={g?.feedback}
-                        optional={c.stage !== "Educação Infantil"}
-                      />
-                    </section>
-                  </ActionForm>
-                </article>
-              );
-            })}
+                      </section>
+                    </ActionForm>
+                  </RecordCard>
+                );
+              })}
+            </RecordCards>
           </Panel>
         </div>
       )}
