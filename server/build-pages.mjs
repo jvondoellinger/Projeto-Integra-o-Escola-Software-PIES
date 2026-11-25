@@ -1,21 +1,11 @@
-import { randomBytes } from "node:crypto";
 import { copyFile, writeFile } from "node:fs/promises";
-import { gzipSync } from "node:zlib";
 
-// Always start with newly generated sample data. Never open the working database.
-process.env.PIES_DB = ":memory:";
-const { db } = await import("./store.mjs");
-const { seedSchoolNetwork } = await import("./sample.mjs");
-const { previewProfiles } = await import("./preview-mode.mjs");
-seedSchoolNetwork(randomBytes(24).toString("hex"));
-const schools = db.prepare("SELECT id,network,name,data FROM schools").all();
-const accounts = db
-  .prepare("SELECT id,school,email,name,role,active FROM accounts")
-  .all();
-await writeFile(
-  "dist-pages/escola-exemplo.bin",
-  gzipSync(JSON.stringify({ schools, accounts, profiles: previewProfiles })),
-);
+const endpoint = process.env.VITE_PIES_API_URL;
+if (!endpoint)
+  throw new Error("Defina VITE_PIES_API_URL para publicar o PIES.");
+const { origin, protocol } = new URL(endpoint);
+if (protocol !== "https:") throw new Error("A API publicada deve usar HTTPS.");
+
 await copyFile("dist-pages/gestao.html", "dist-pages/index.html");
 await writeFile(
   "dist-pages/_headers",
@@ -23,8 +13,10 @@ await writeFile(
   X-Content-Type-Options: nosniff
   Referrer-Policy: same-origin
   X-Frame-Options: DENY
-  Content-Security-Policy: default-src 'self'; script-src 'self' 'wasm-unsafe-eval'; style-src 'self'; img-src 'self' data:; object-src 'none'; base-uri 'self'; frame-ancestors 'none'; form-action 'self'
-/escola-exemplo.bin
+  Content-Security-Policy: default-src 'self'; script-src 'self'; style-src 'self'; img-src 'self' data:; connect-src 'self' ${origin}; object-src 'none'; base-uri 'self'; frame-ancestors 'none'; form-action 'self'
+/
+  Cache-Control: no-cache
+/gestao.html
   Cache-Control: no-cache
 `,
 );
