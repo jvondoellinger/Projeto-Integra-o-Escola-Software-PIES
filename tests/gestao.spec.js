@@ -347,3 +347,72 @@ test("cadastro mantém o formulário e os valores após erro da escola", async (
     page.getByRole("heading", { name: "Isabela de Souza", exact: true }),
   ).toBeVisible();
 });
+
+test("barra móvel acompanha a rota e abre as demais áreas sem esconder o conteúdo", async ({
+  page,
+}) => {
+  await page.setViewportSize({ width: 320, height: 700 });
+  await signIn(page, "professor@ipe.example");
+  const bar = page.getByRole("navigation", { name: "Navegação móvel do PIES" });
+  const more = bar.getByRole("button", { name: "Mais áreas" });
+  const sheet = page.getByRole("dialog", { name: "Mais áreas" });
+  await expect(
+    page.getByRole("navigation", { name: "Áreas do PIES" }),
+  ).toHaveCount(0);
+  await expect(bar.getByRole("button", { name: "Início" })).toHaveAttribute(
+    "aria-current",
+    "page",
+  );
+  await bar.getByRole("button", { name: "Avaliações" }).click();
+  await expect(page).toHaveURL(/#avaliacoes$/);
+  await expect(bar.getByRole("button", { name: "Avaliações" })).toHaveAttribute(
+    "aria-current",
+    "page",
+  );
+
+  await more.click();
+  await expect(sheet).toBeVisible();
+  await expect(
+    sheet.getByRole("button", { name: "Secretaria", exact: true }),
+  ).toHaveCount(0);
+  await page.keyboard.press("Escape");
+  await expect(more).toBeFocused();
+  await more.click();
+  await sheet
+    .getByRole("button", { name: "Acompanhamento", exact: true })
+    .click();
+  await expect(sheet).toHaveCount(0);
+  await expect(more).toHaveAttribute("data-active", "true");
+  await expect(page.getByRole("main")).toBeFocused();
+  await page.goBack();
+  await expect(bar.getByRole("button", { name: "Avaliações" })).toHaveAttribute(
+    "aria-current",
+    "page",
+  );
+
+  const geometry = await bar.evaluate((nav) => {
+    const footer = document.querySelector(".school-footer");
+    window.scrollTo(0, document.documentElement.scrollHeight);
+    return {
+      fixedAtBottom: nav.getBoundingClientRect().bottom === window.innerHeight,
+      footerClear:
+        footer.getBoundingClientRect().bottom <=
+        nav.getBoundingClientRect().top,
+      noHorizontalOverflow:
+        document.documentElement.scrollWidth === window.innerWidth,
+    };
+  });
+  expect(geometry).toEqual({
+    fixedAtBottom: true,
+    footerClear: true,
+    noHorizontalOverflow: true,
+  });
+
+  await more.click();
+  await expect(sheet).toBeVisible();
+  await page.setViewportSize({ width: 1024, height: 768 });
+  await expect(sheet).toHaveCount(0);
+  await expect(
+    page.getByRole("navigation", { name: "Áreas do PIES" }),
+  ).toBeVisible();
+});
