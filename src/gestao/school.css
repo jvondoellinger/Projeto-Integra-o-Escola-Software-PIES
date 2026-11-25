@@ -204,9 +204,92 @@ a {
   margin: 7px 0 15px;
 }
 .school-fields {
+  margin: 0;
+  padding: 0;
+  border: 0;
+  min-width: 0;
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(min(190px, 100%), 1fr));
   gap: 14px;
+}
+.school-dialog {
+  width: min(680px, calc(100% - 28px));
+  max-height: calc(100% - 28px);
+  padding: 0;
+  border: 1px solid #c8d9f5;
+  border-radius: 20px;
+  color: #162b50;
+  background: white;
+  box-shadow: 0 22px 80px #09245845;
+}
+.school-dialog[open] {
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+.school-dialog::backdrop {
+  background: rgb(13 36 77 / 42%);
+  backdrop-filter: blur(6px);
+}
+body:has(.school-dialog[open]) {
+  overflow: hidden;
+}
+body:has(.school-dialog[open]) .school-page-error {
+  display: none;
+}
+.school-create-actions {
+  margin-bottom: 14px;
+}
+.school-secondary + .school-create-actions {
+  margin-left: 8px;
+}
+.school-dialog-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 16px clamp(16px, 4vw, 24px);
+  border-bottom: 1px solid #dbe6f7;
+  background: #f5f9ff;
+}
+.school-dialog-header h2 {
+  margin: 0;
+  font-size: clamp(1.1rem, 4vw, 1.42rem);
+  overflow-wrap: anywhere;
+}
+.school-dialog-close {
+  display: grid;
+  place-items: center;
+  flex: 0 0 42px;
+  height: 42px;
+  border: 1px solid #c8d9f5;
+  border-radius: 12px;
+  background: white;
+  color: #162b50;
+}
+.school-dialog-body {
+  overflow: auto;
+  overscroll-behavior: contain;
+  padding: 16px clamp(16px, 4vw, 24px) 20px;
+}
+.school-dialog-body .school-form {
+  margin: 0;
+}
+.school-dialog-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  justify-content: flex-end;
+  margin-top: 18px;
+}
+.school-dialog-actions .school-primary {
+  margin: 0;
+}
+.school-dialog .school-fields > p {
+  grid-column: 1 / -1;
+}
+.school-dialog button:disabled {
+  opacity: 0.62;
 }
 .school-form > h2 {
   margin-bottom: 14px;
