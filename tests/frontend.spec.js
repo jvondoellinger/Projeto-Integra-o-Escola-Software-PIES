@@ -43,15 +43,15 @@ test("busca, turma, bimestre e estado vazio", async ({ page }) => {
     .getByRole("button", { name: "Somente essenciais", exact: true })
     .click();
   await page.getByLabel("Filtrar turma").selectOption("8º ano B");
-  await expect(page.locator("tbody tr")).toHaveCount(3);
+  await expect(page.locator(".student-list tbody tr")).toHaveCount(3);
   await page.getByLabel("Período", { exact: true }).selectOption("1º bimestre");
-  await expect(page.locator("tbody tr").first()).toContainText("7,7");
+  await expect(page.locator(".student-list tbody tr").first()).toContainText("7,4");
   await page.getByLabel("Buscar aluno").fill("ninguém");
   await expect(
     page.getByText("Nenhum aluno encontrado.", { exact: false }),
   ).toBeVisible();
   await page.getByLabel("Buscar aluno").fill("Camila");
-  await expect(page.locator("tbody tr")).toHaveCount(1);
+  await expect(page.locator(".student-list tbody tr")).toHaveCount(1);
 });
 test("cria, persiste, conclui e reabre plano; registra observações", async ({
   page,

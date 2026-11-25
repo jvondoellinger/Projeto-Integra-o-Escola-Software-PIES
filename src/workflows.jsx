@@ -1,3 +1,4 @@
+import PerformanceChart from "./PerformanceChart.jsx";
 import React, { useState } from "react";
 import {
   Target,
@@ -58,7 +59,7 @@ export function writeSession(key, value) {
     return false;
   }
 }
-export function Profile({ student: s, back, Chart, plans, setPlans, toast }) {
+export function Profile({ student: s, back, grades, plans, setPlans, toast }) {
   const [tab, setTab] = useState("Visão do aluno"),
     [form, setForm] = useState(false),
     [notes, setNotes] = useState(() =>
@@ -245,22 +246,15 @@ export function Profile({ student: s, back, Chart, plans, setPlans, toast }) {
               <article className="stat">
                 <div>Evolução da média</div>
                 <strong>
-                  {s.average >= s.previous ? "+" : ""}
-                  {number(s.average - s.previous)}
+                  {s.previous === null || s.average === null
+                    ? "—"
+                    : `${s.average >= s.previous ? "+" : ""}${number(s.average - s.previous)}`}
                 </strong>
                 <small>Pontos em relação ao período anterior</small>
               </article>
             </section>
             <div className="overview-grid">
-              <section className="panel">
-                <div className="section-title">
-                  <div>
-                    <h2>Uma trajetória em construção</h2>
-                    <p>Histórico de desempenho em Matemática</p>
-                  </div>
-                </div>
-                <Chart values={s.scores} id={"student-" + s.id} />
-              </section>
+              <PerformanceChart grades={grades} studentIds={[s.id]} />
               <section className="panel">
                 <h2>Aprendizagem por conteúdo</h2>
                 <p className="caption">
