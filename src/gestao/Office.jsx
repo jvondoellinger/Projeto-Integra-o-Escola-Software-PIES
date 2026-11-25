@@ -1,5 +1,6 @@
 import { BookOpen, GraduationCap, School, Users } from "lucide-react";
 import React, { useRef, useState } from "react";
+import ReportDownload, { reportGroup } from "./ReportDownload.jsx";
 import {
   ActionDialog,
   ActionForm,
@@ -745,7 +746,17 @@ export function Reports({ state }) {
           transmissão é feita no Educacenso conforme o leiaute da coleta.
         </p>
       </Panel>
-      <Panel title="Boletins publicados">
+      <Panel
+        title="Boletins publicados"
+        actions={
+          <ReportDownload
+            school={state.name}
+            reports={selected.map((closure) => reportGroup(state, closure))}
+            trigger="Exportar boletins"
+            includeGroup
+          />
+        }
+      >
         <div className="school-filters">
           <label>
             Turma
@@ -788,38 +799,15 @@ export function Reports({ state }) {
               eyebrow={nameOf(state.periods, c.periodId)}
               detail={`${c.publicRows.length} boletins publicados`}
               icon={BookOpen}
-              action="Baixar boletins da turma"
-              onOpen={() =>
-                download(
-                  "boletins-da-turma.csv",
-                  ["estudante", "media", "frequencia"],
-                  c.publicRows.map((r) => [r.name, r.average, r.attendance]),
-                )
-              }
-            />
+            >
+              <ReportDownload
+                school={state.name}
+                reports={[reportGroup(state, c)]}
+                triggerClass="record-open"
+              />
+            </RecordCard>
           ))}
         </RecordCards>
-        <button
-          className="school-secondary"
-          disabled={!selected.length}
-          onClick={() =>
-            download(
-              "boletins.csv",
-              ["turma", "periodo", "estudante", "media", "frequencia"],
-              selected.flatMap((c) =>
-                c.publicRows.map((r) => [
-                  nameOf(state.classes, c.classId),
-                  nameOf(state.periods, c.periodId),
-                  r.name,
-                  r.average,
-                  r.attendance,
-                ]),
-              ),
-            )
-          }
-        >
-          Exportar boletins
-        </button>
       </Panel>
       <Panel title="Registro de alterações">
         <RecordCards limit={6} empty="Nenhuma alteração registrada.">

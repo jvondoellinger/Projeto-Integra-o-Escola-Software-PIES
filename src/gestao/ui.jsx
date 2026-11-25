@@ -264,10 +264,17 @@ export function Form({
     </form>
   );
 }
-export function Panel({ title, subtitle, children, className = "" }) {
+export function Panel({ title, subtitle, actions, children, className = "" }) {
   return (
     <section className={"school-panel " + className}>
-      {title && <h2>{title}</h2>}
+      {actions ? (
+        <header className="school-panel-toolbar">
+          <h2>{title}</h2>
+          <div className="school-actions">{actions}</div>
+        </header>
+      ) : (
+        title && <h2>{title}</h2>
+      )}
       {subtitle && <p className="school-caption">{subtitle}</p>}
       {children}
     </section>
@@ -402,9 +409,13 @@ export function download(name, columns, rows) {
   const csv = [columns, ...rows]
     .map((r) => r.map(escape).join(";"))
     .join("\r\n");
-  const url = URL.createObjectURL(
+  downloadFile(
+    name,
     new Blob(["\uFEFF", csv], { type: "text/csv;charset=utf-8" }),
   );
+}
+export function downloadFile(name, blob) {
+  const url = URL.createObjectURL(blob);
   const a = document.createElement("a");
   a.href = url;
   a.download = name;

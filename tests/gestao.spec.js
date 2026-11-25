@@ -1,5 +1,6 @@
 import { test, expect } from "@playwright/test";
 import { once } from "node:events";
+import { readFile } from "node:fs/promises";
 
 test.describe.configure({ mode: "serial" });
 const password = "Senha institucional 2026!";
@@ -215,6 +216,26 @@ test("professor registra chamada desconectado, sincroniza, corrige e família re
     .getByRole("button", { name: "Publicar boletins", exact: true })
     .click();
   await expect(page.getByText(/· Publicado$/)).toBeVisible();
+  await go(page, "Relatórios e Censo");
+  for (const format of ["CSV", "PDF"]) {
+    await page
+      .getByRole("button", { name: "Baixar boletins da turma", exact: true })
+      .click();
+    const choice = page.getByRole("dialog", { name: "Baixar boletins" });
+    const downloaded = page.waitForEvent("download");
+    await choice
+      .getByRole("button", { name: new RegExp(`Baixar ${format}`) })
+      .click();
+    const file = await downloaded;
+    const bytes = await readFile(await file.path());
+    if (format === "CSV") {
+      expect(bytes.toString("utf8")).toContain('"Alice Santos";"9";"100"');
+    } else {
+      expect(file.suggestedFilename()).toBe("boletins-da-turma-pies.pdf");
+      expect(bytes.toString("ascii", 0, 5)).toBe("%PDF-");
+    }
+    await expect(choice).toHaveCount(0);
+  }
   await page.getByRole("button", { name: "Sair", exact: true }).click();
   await signIn(page, "familia@ipe.example");
   await go(page, "Boletins e frequência");
