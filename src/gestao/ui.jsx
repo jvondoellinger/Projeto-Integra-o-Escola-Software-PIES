@@ -4,8 +4,16 @@ export const nowDate = () =>
   new Intl.DateTimeFormat("en-CA", { timeZone: "America/Sao_Paulo" }).format(
     new Date(),
   );
-export const br = (day) =>
-  day ? day.slice(0, 10).split("-").reverse().join("/") : "—";
+const brDate = new Intl.DateTimeFormat("pt-BR", {
+  dateStyle: "short",
+  timeZone: "America/Sao_Paulo",
+});
+export function br(day) {
+  if (!day) return "—";
+  return day.includes("T")
+    ? brDate.format(new Date(day))
+    : day.split("-").reverse().join("/");
+}
 export const grade = (value) =>
   value == null
     ? "—"
