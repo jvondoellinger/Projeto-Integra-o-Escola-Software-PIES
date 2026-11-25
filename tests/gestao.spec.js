@@ -197,6 +197,11 @@ test("professor registra chamada desconectado, sincroniza, corrige e família re
   await page.getByRole("button", { name: "Sair", exact: true }).click();
   await signIn(page, "secretaria@ipe.example");
   await go(page, "Fechamento e boletins");
+  await expect(page.getByLabel("Turma do boletim")).toHaveValue("");
+  await expect(page.getByLabel("Período do boletim")).toHaveValue("");
+  await expect(
+    page.getByRole("button", { name: /7º B, Período letivo/ }),
+  ).toBeVisible();
   await page.getByLabel("Turma do boletim").selectOption(fixture.c.id);
   await page
     .getByLabel("Período do boletim")
@@ -216,6 +221,13 @@ test("professor registra chamada desconectado, sincroniza, corrige e família re
     .getByRole("button", { name: "Publicar boletins", exact: true })
     .click();
   await expect(page.getByText(/· Publicado$/)).toBeVisible();
+  await page
+    .getByRole("button", { name: "Baixar boletins da turma", exact: true })
+    .click();
+  await expect(
+    page.getByRole("dialog", { name: "Baixar boletins" }),
+  ).toBeVisible();
+  await page.keyboard.press("Escape");
   await go(page, "Relatórios e Censo");
   for (const format of ["CSV", "PDF"]) {
     await page
@@ -536,4 +548,71 @@ test("professor consulta a entrega dentro do diálogo ao lançar e editar a nota
   await expect(
     correction.getByLabel(`Devolutiva de ${fixture.s.name}`),
   ).toHaveValue("Boa explicação.");
+});
+
+test("fechamento mostra turmas de todos os períodos e filtra sem seleção inicial", async ({
+  page,
+  request,
+}) => {
+  const signedIn = await request.post(url + "/api/login", {
+    data: { email: "secretaria@ipe.example", password },
+  });
+  expect(signedIn.ok()).toBe(true);
+  const nextYear = fixture.year + 1;
+  for (const [kind, data] of [
+    [
+      "period",
+      {
+        name: "Próximo ciclo",
+        start: `${nextYear}-02-01`,
+        end: `${nextYear}-07-01`,
+      },
+    ],
+    [
+      "class",
+      {
+        name: "8º C",
+        stage: "Ensino Fundamental",
+        subject: "Matemática",
+        year: nextYear,
+        shift: "Tarde",
+        teachers: fixture.c.teachers,
+      },
+    ],
+  ]) {
+    const created = await request.post(url + "/api/command", {
+      data: { id: crypto.randomUUID(), kind, data },
+    });
+    expect(created.ok()).toBe(true);
+  }
+  await signIn(page, "secretaria@ipe.example");
+  await go(page, "Fechamento e boletins");
+  const toolbar = page.locator(".school-panel-toolbar").filter({
+    has: page.getByRole("heading", { name: "Turmas e períodos" }),
+  });
+  await toolbar
+    .getByRole("button", { name: "Criar período", exact: true })
+    .click();
+  await expect(
+    page.getByRole("dialog", { name: "Criar período letivo" }),
+  ).toBeVisible();
+  await page.keyboard.press("Escape");
+  await expect(
+    toolbar.getByRole("button", { name: "Editar critérios" }),
+  ).toBeVisible();
+  const current = page.getByRole("button", { name: /7º B, Período letivo/ });
+  const future = page.getByRole("button", { name: /8º C, Próximo ciclo/ });
+  await expect(current).toBeVisible();
+  await expect(future).toBeVisible();
+  await page
+    .getByLabel("Período do boletim")
+    .selectOption({ label: "Próximo ciclo" });
+  await expect(current).toHaveCount(0);
+  await future.click();
+  await expect(
+    page.getByRole("heading", { name: "8º C · Próximo ciclo" }),
+  ).toBeVisible();
+  await page.getByRole("button", { name: "Limpar filtros" }).click();
+  await expect(current).toBeVisible();
+  await expect(future).toBeVisible();
 });

@@ -194,10 +194,51 @@ a {
   gap: 10px 16px;
   margin-bottom: 14px;
 }
-.school-panel-toolbar .school-actions button svg,
+.school-actions button > svg,
+.school-create-actions > svg,
+.school-create-actions > button > svg,
 button.record-open svg {
   vertical-align: middle;
   margin-right: 6px;
+}
+.school-closing-periods {
+  display: grid;
+  gap: 6px;
+  width: 100%;
+}
+.school-closing-periods button {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 3px 8px;
+  min-height: 42px;
+  padding: 7px 8px;
+  border: 1px solid #d4e2f6;
+  background: #f5f9ff;
+  color: #1b3b6a;
+  text-align: left;
+  font-size: 0.84rem;
+  font-weight: 700;
+}
+.school-closing-periods button:hover {
+  border-color: #8aaee7;
+  background: #e8f2ff;
+}
+.school-closing-periods small {
+  border-radius: 6px;
+  padding: 3px 5px;
+  background: #fff0d1;
+  color: #684810;
+  font-size: 0.69rem;
+}
+.school-closing-periods small[data-status="Fechado"] {
+  background: #dfebfc;
+  color: #244675;
+}
+.school-closing-periods small[data-status="Publicado"] {
+  background: #dcefe6;
+  color: #1d5f44;
 }
 .school-export-options {
   display: grid;
