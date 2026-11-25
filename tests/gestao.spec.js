@@ -113,12 +113,33 @@ test("professor registra chamada desconectado, sincroniza, corrige e família re
   ).toHaveCount(0);
   await go(page, "Diário de classe");
   await page.getByLabel("Turma da chamada").selectOption(fixture.c.id);
-  await page.getByLabel("Horário da aula").fill("08:00");
-  await page.getByLabel("Conteúdo ministrado").fill("Operações e problemas");
+  const register = page.getByRole("button", {
+    name: "Registrar aula",
+    exact: true,
+  });
+  await expect(page.getByLabel("Horário da aula")).toHaveCount(0);
+  await register.click();
+  const diary = page.getByRole("dialog", { name: "Registrar aula" });
+  await expect(diary).toBeVisible();
+  await expect(
+    diary.getByRole("heading", { name: "Registrar aula" }),
+  ).toBeFocused();
+  expect(
+    await diary.evaluate(
+      (el) => getComputedStyle(el, "::backdrop").backdropFilter,
+    ),
+  ).toBe("blur(6px)");
+  await page.keyboard.press("Escape");
+  await expect(diary).toHaveCount(0);
+  await expect(register).toBeFocused();
+  await register.click();
+  await diary.getByLabel("Horário da aula").fill("08:00");
+  await diary.getByLabel("Conteúdo ministrado").fill("Operações e problemas");
   await context.setOffline(true);
-  await page
+  await diary
     .getByRole("button", { name: "Registrar aula", exact: true })
     .click();
+  await expect(diary).toHaveCount(0);
   await expect(page.getByText("1 chamada(s) aguardando envio")).toBeVisible();
   await context.setOffline(false);
   await expect(page.getByText("1 chamada(s) aguardando envio")).toHaveCount(0);
@@ -133,27 +154,43 @@ test("professor registra chamada desconectado, sincroniza, corrige e família re
       })
       .getByRole("heading", { name: "Avaliações por formato" }),
   ).toBeVisible();
-  await page.getByLabel("Turma da avaliação").selectOption(fixture.c.id);
-  await page.getByLabel("Título da avaliação").fill("Prova de operações");
   await page
+    .getByRole("button", { name: "Planejar avaliação", exact: true })
+    .click();
+  const assessment = page.getByRole("dialog", { name: "Planejar avaliação" });
+  await assessment.getByLabel("Turma da avaliação").selectOption(fixture.c.id);
+  await assessment.getByLabel("Título da avaliação").fill("Prova de operações");
+  await assessment
     .getByRole("combobox", { name: "Formato", exact: true })
     .selectOption("Prova");
-  await page.getByLabel("Prazo ou dia da prova").fill(fixture.day);
-  await page
+  await assessment.getByLabel("Prazo ou dia da prova").fill(fixture.day);
+  await assessment
     .getByLabel("Orientações", { exact: true })
     .fill("Resolva e mostre a operação.");
-  await page.getByRole("button", { name: "Publicar ou agendar" }).click();
-  await page.getByRole("button", { name: "Abrir correção" }).click();
+  await assessment.getByRole("button", { name: "Publicar ou agendar" }).click();
+  await expect(assessment).toHaveCount(0);
+  const exam = page
+    .locator(".record-card")
+    .filter({ has: page.getByRole("heading", { name: "Prova de operações" }) });
+  await exam.getByRole("button", { name: "Abrir correção" }).click();
   for (const [i, s] of fixture.pupils.entries()) {
-    await page
+    const card = page.locator(".school-record").filter({
+      has: page.getByRole("heading", { name: s.name, exact: true }),
+    });
+    await card.getByRole("button", { name: "Lançar ou editar nota" }).click();
+    const correction = page.getByRole("dialog", {
+      name: `Corrigir avaliação de ${s.name}`,
+    });
+    await correction
       .getByLabel(`Nota de ${s.name}`, { exact: true })
       .fill(i ? "7" : "9");
-    await page
+    await correction
       .getByRole("button", {
         name: `Salvar avaliação de ${s.name}`,
         exact: true,
       })
       .click();
+    await expect(correction).toHaveCount(0);
     await expect(page.getByRole("status")).toContainText("Registro atualizado");
   }
   await page.getByRole("button", { name: "Sair", exact: true }).click();
@@ -167,6 +204,14 @@ test("professor registra chamada desconectado, sincroniza, corrige e família re
     .getByRole("button", { name: "Fechar período", exact: true })
     .click();
   await page
+    .getByRole("dialog", { name: "Fechar período" })
+    .getByRole("button", { name: "Fechar período", exact: true })
+    .click();
+  await page
+    .getByRole("button", { name: "Publicar boletins", exact: true })
+    .click();
+  await page
+    .getByRole("dialog", { name: "Publicar boletins" })
     .getByRole("button", { name: "Publicar boletins", exact: true })
     .click();
   await expect(page.getByText(/· Publicado$/)).toBeVisible();
@@ -244,14 +289,18 @@ test("calendário mensal permite abrir o dia, criar compromisso e acessar a prov
   await expect(day).toHaveAttribute("aria-pressed", "false");
   await day.click();
   await page.getByRole("button", { name: "Adicionar compromisso" }).click();
-  await expect(page.getByLabel("Data do compromisso")).toHaveValue(fixture.day);
+  const event = page.getByRole("dialog", { name: "Novo compromisso" });
+  await expect(event.getByLabel("Data do compromisso")).toHaveValue(
+    fixture.day,
+  );
   await page
     .getByLabel("Compromisso", { exact: true })
     .fill("Encontro de leitura");
   await page
     .getByRole("combobox", { name: "Tipo do novo compromisso" })
     .selectOption("Reunião");
-  await page.getByRole("button", { name: "Salvar compromisso" }).click();
+  await event.getByRole("button", { name: "Salvar compromisso" }).click();
+  await expect(event).toHaveCount(0);
   await expect(
     page.getByRole("heading", { name: "Encontro de leitura", exact: true }),
   ).toBeVisible();
@@ -267,5 +316,34 @@ test("calendário mensal permite abrir o dia, criar compromisso e acessar a prov
   await page.goBack();
   await expect(
     page.getByRole("heading", { name: "Encontro de leitura", exact: true }),
+  ).toBeVisible();
+});
+
+test("cadastro mantém o formulário e os valores após erro da escola", async ({
+  page,
+}) => {
+  await signIn(page, "secretaria@ipe.example");
+  await go(page, "Secretaria");
+  const trigger = page.getByRole("button", {
+    name: "Cadastrar estudante",
+    exact: true,
+  });
+  await trigger.click();
+  const dialog = page.getByRole("dialog", { name: "Cadastrar estudante" });
+  await dialog.getByLabel("Nome do estudante").fill("Isabela de Souza");
+  await dialog.getByLabel("Número de matrícula").fill("2026-01");
+  await dialog.getByRole("button", { name: "Salvar", exact: true }).click();
+  await expect(dialog.getByRole("alert")).toContainText(
+    "Matrícula ou identificador Inep duplicado.",
+  );
+  await expect(dialog.getByLabel("Nome do estudante")).toHaveValue(
+    "Isabela de Souza",
+  );
+  await dialog.getByLabel("Número de matrícula").fill("2026-03");
+  await dialog.getByRole("button", { name: "Salvar", exact: true }).click();
+  await expect(dialog).toHaveCount(0);
+  await expect(trigger).toBeFocused();
+  await expect(
+    page.getByRole("heading", { name: "Isabela de Souza", exact: true }),
   ).toBeVisible();
 });
