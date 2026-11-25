@@ -1,0 +1,5 @@
+export const schoolSchema = `PRAGMA foreign_keys=ON;
+CREATE TABLE IF NOT EXISTS schools(id TEXT PRIMARY KEY, network TEXT NOT NULL, name TEXT NOT NULL, data TEXT NOT NULL);
+CREATE TABLE IF NOT EXISTS accounts(id TEXT PRIMARY KEY, school TEXT NOT NULL REFERENCES schools(id), email TEXT UNIQUE NOT NULL, name TEXT NOT NULL, role TEXT NOT NULL, password TEXT NOT NULL, active INTEGER NOT NULL DEFAULT 1);
+CREATE TABLE IF NOT EXISTS sessions(token TEXT PRIMARY KEY, account TEXT NOT NULL REFERENCES accounts(id), expires INTEGER NOT NULL);
+CREATE TABLE IF NOT EXISTS operations(school TEXT NOT NULL, account TEXT NOT NULL, id TEXT NOT NULL, PRIMARY KEY(school,account,id));`;

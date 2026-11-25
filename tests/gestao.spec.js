@@ -100,6 +100,12 @@ test("professor registra chamada desconectado, sincroniza, corrige e família re
   context,
 }) => {
   await signIn(page, "professor@ipe.example");
+  const feed = page.getByRole("region", { name: "Feed escolar" });
+  await expect(feed.getByRole("heading", { name: "Seu feed" })).toBeVisible();
+  await feed.getByRole("button", { name: "Agenda", exact: true }).click();
+  await expect(
+    feed.getByRole("button", { name: "Agenda", exact: true }),
+  ).toHaveAttribute("aria-pressed", "true");
   await expect(
     page
       .getByRole("navigation")
@@ -120,6 +126,13 @@ test("professor registra chamada desconectado, sincroniza, corrige e família re
     page.getByRole("heading", { name: "Operações e problemas" }),
   ).toBeVisible();
   await go(page, "Avaliações");
+  await expect(
+    page
+      .getByRole("complementary", {
+        name: "Indicadores e informações auxiliares",
+      })
+      .getByRole("heading", { name: "Avaliações por formato" }),
+  ).toBeVisible();
   await page.getByLabel("Turma da avaliação").selectOption(fixture.c.id);
   await page.getByLabel("Título da avaliação").fill("Prova de operações");
   await page

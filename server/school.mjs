@@ -1,4 +1,3 @@
-import { randomUUID } from "node:crypto";
 import {
   db,
   atomic,
@@ -56,7 +55,7 @@ function numeric(value, label, min, max) {
 }
 const round = (n) => Math.round(n * 100) / 100;
 const add = (items, data) => {
-  const item = { id: randomUUID(), ...data };
+  const item = { id: crypto.randomUUID(), ...data };
   items.push(item);
   return item;
 };

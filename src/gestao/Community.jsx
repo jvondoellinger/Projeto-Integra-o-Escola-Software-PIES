@@ -1,4 +1,4 @@
-import React, { useState, useRef } from "react";
+import React, { useState, useRef, useEffect } from "react";
 import {
   CalendarDays,
   ClipboardCheck,
@@ -253,7 +253,14 @@ export function Calendar({
     </div>
   );
 }
-export function Notices({ state, send, staff, office }) {
+export function Notices({ state, send, staff, office, initialId }) {
+  const focused = useRef(null);
+  useEffect(() => {
+    if (initialId) {
+      focused.current?.focus();
+      focused.current?.scrollIntoView({ block: "start" });
+    }
+  }, [initialId]);
   return (
     <>
       <Panel title="Comunicados da escola">
@@ -261,7 +268,12 @@ export function Notices({ state, send, staff, office }) {
           <p className="school-empty">Ainda não há comunicados.</p>
         )}
         {[...state.notices].reverse().map((n) => (
-          <article className="school-record" key={n.id}>
+          <article
+            className={`school-record${n.id === initialId ? " is-featured" : ""}`}
+            key={n.id}
+            ref={n.id === initialId ? focused : undefined}
+            tabIndex={n.id === initialId ? -1 : undefined}
+          >
             <small>
               {br(n.day)} ·{" "}
               {n.classId ? nameOf(state.classes, n.classId) : "Toda a escola"}
@@ -311,7 +323,7 @@ export function Notices({ state, send, staff, office }) {
     </>
   );
 }
-export function Family({ state, send, user, initialDay }) {
+export function Family({ state, send, user, initialDay, onStudentFocus }) {
   const [choice, setChoice] = useState(""),
     [document, setDocument] = useState(null),
     [periodFilter, setPeriodFilter] = useState(""),
@@ -329,6 +341,9 @@ export function Family({ state, send, user, initialDay }) {
 
   const pupil =
     state.students.find((x) => x.id === choice) || state.students[0];
+  useEffect(() => {
+    onStudentFocus?.(pupil?.id || null);
+  }, [pupil?.id, onStudentFocus]);
   if (!pupil)
     return (
       <Panel title="Nenhum vínculo escolar associado">

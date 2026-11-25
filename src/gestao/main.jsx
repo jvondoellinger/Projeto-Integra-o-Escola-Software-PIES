@@ -1,3 +1,5 @@
+import SchoolFeed from "./SchoolFeed.jsx";
+import ContextRail from "./ContextRail.jsx";
 import React, { useEffect, useRef, useState } from "react";
 import { createRoot } from "react-dom/client";
 import {
@@ -21,22 +23,14 @@ import {
 import { Accounts, Enrollment, Classes, Reports, roles } from "./Office.jsx";
 import { Diary, Evaluations, Closing, FollowUp } from "./Teaching.jsx";
 import { Calendar, Notices, Family, Activities } from "./Community.jsx";
-import {
-  Field,
-  Form,
-  Panel,
-  RecordCard,
-  RecordCards,
-  br,
-  nameOf,
-  nowDate,
-} from "./ui.jsx";
+import { Field, Form, Panel } from "./ui.jsx";
 import "@fontsource/dm-sans/latin-400.css";
 import "@fontsource/dm-sans/latin-600.css";
 import "@fontsource/dm-sans/latin-700.css";
 import "@fontsource/manrope/latin-800.css";
 import "../academic.css";
 import "./school.css";
+import "./feed.css";
 
 const staffRoles = ["secretaria", "coordenacao", "professor"];
 const adminRoles = ["secretaria", "coordenacao"];
@@ -64,7 +58,10 @@ const headings = {
   fechamento: "Fechamento e boletins",
   familia: "Boletins e frequência",
 };
+const isPagesPreview = import.meta.env.MODE === "pages";
 async function request(path, body) {
+  if (import.meta.env.MODE === "pages")
+    return (await import("./pagesRequest.js")).pagesRequest(path, body);
   const response = await fetch(
     "/api/" + path,
     body
@@ -117,21 +114,31 @@ function Login({ onLogin, error, profiles }) {
         <p>Da matrícula à chamada, da avaliação ao boletim.</p>
       </section>
       <main className="school-login-form">
-        <Form title="Acesse sua escola" button="Entrar" onSubmit={onLogin}>
-          <Field
-            label="E-mail escolar"
-            name="email"
-            type="email"
-            autoComplete="username"
-          />
-          <Field
-            label="Senha"
-            name="password"
-            type="password"
-            autoComplete="current-password"
-            optional={profiles.length > 0}
-          />
-        </Form>
+        {isPagesPreview ? (
+          <div className="pages-welcome">
+            <h2>Explore o PIES</h2>
+            <p>
+              Escolha um perfil para navegar pela escola de exemplo. Alterações
+              ficam neste navegador.
+            </p>
+          </div>
+        ) : (
+          <Form title="Acesse sua escola" button="Entrar" onSubmit={onLogin}>
+            <Field
+              label="E-mail escolar"
+              name="email"
+              type="email"
+              autoComplete="username"
+            />
+            <Field
+              label="Senha"
+              name="password"
+              type="password"
+              autoComplete="current-password"
+              optional={profiles.length > 0}
+            />
+          </Form>
+        )}
         {profiles.length > 0 && (
           <section
             aria-labelledby="quick-access"
@@ -139,7 +146,9 @@ function Login({ onLogin, error, profiles }) {
           >
             <h3 id="quick-access">Escolha um perfil</h3>
             <p className="school-caption">
-              Entre direto ou use o e-mail do perfil com qualquer senha.
+              {isPagesPreview
+                ? "Escolha a área escolar que deseja explorar."
+                : "Entre direto ou use o e-mail do perfil com qualquer senha."}
             </p>
             <div className="school-actions">
               {profiles.map((profile) => (
@@ -162,144 +171,16 @@ function Login({ onLogin, error, profiles }) {
           </p>
         )}
         <p className="school-caption">
-          {!profiles.length && "Use a conta fornecida pela sua instituição. "}O
-          PIES usa um cookie essencial para manter o acesso.
+          {!isPagesPreview && (
+            <>
+              {!profiles.length &&
+                "Use a conta fornecida pela sua instituição. "}
+              O PIES usa um cookie essencial para manter o acesso.
+            </>
+          )}
         </p>
       </main>
     </div>
-  );
-}
-function Overview({ state, user, open }) {
-  const office = adminRoles.includes(user.role);
-  const staff = staffRoles.includes(user.role);
-  const today = nowDate();
-  if (user.role === "rede")
-    return (
-      <Panel title="Unidades da rede">
-        <RecordCards>
-          {state.schools.map((s) => (
-            <RecordCard
-              key={s.id}
-              title={s.name}
-              icon={School}
-              eyebrow="Unidade escolar"
-            >
-              <dl className="record-metrics">
-                <div>
-                  <dt>Estudantes ativos</dt>
-                  <dd>{s.students}</dd>
-                </div>
-                <div>
-                  <dt>Turmas e disciplinas</dt>
-                  <dd>{s.classes}</dd>
-                </div>
-                <div>
-                  <dt>Períodos publicados</dt>
-                  <dd>{s.published}</dd>
-                </div>
-                <div>
-                  <dt>Acompanhamentos abertos</dt>
-                  <dd>{s.openCases}</dd>
-                </div>
-              </dl>
-            </RecordCard>
-          ))}
-        </RecordCards>
-      </Panel>
-    );
-  const notifications = state.notifications || [];
-  const stats = staff
-    ? [
-        ["Turmas", state.classes.length, "turmas"],
-        [
-          "Estudantes ativos",
-          new Set(
-            state.enrollments.filter((e) => !e.end).map((e) => e.studentId),
-          ).size,
-          office && user.role === "secretaria" ? "matriculas" : "turmas",
-        ],
-        ["Aulas registradas", state.lessons.length, "diario"],
-        [
-          "Acompanhamentos abertos",
-          state.cases.filter((c) => c.state !== "Concluído").length,
-          "apoio",
-        ],
-      ]
-    : [
-        ["Estudantes vinculados", state.students.length, "familia"],
-        [
-          "Boletins disponíveis",
-          state.closures.reduce((n, c) => n + c.rows.length, 0),
-          "familia",
-        ],
-        [
-          "Comunicados sem ciência",
-          state.notices.filter(
-            (n) => !state.receipts.some((r) => r.noticeId === n.id),
-          ).length,
-          "comunicados",
-        ],
-      ];
-  return (
-    <>
-      <div className="school-metrics">
-        {stats.map(([title, value, id]) => (
-          <button key={title} onClick={() => open(id)}>
-            <span>{title}</span>
-            <strong>{value}</strong>
-            <ChevronRight size={18} />
-          </button>
-        ))}
-      </div>
-      <Panel
-        title="Prazos e ações"
-        subtitle="Agenda, entregas, correções e comunicados priorizados para o seu perfil."
-      >
-        {notifications.length ? (
-          <div className="school-notifications">
-            {notifications.map((n) => (
-              <article key={n.id}>
-                <span className="school-pill">{n.label}</span>
-                <h3>{n.title}</h3>
-                <p>{n.detail}</p>
-                <button
-                  className="school-secondary"
-                  onClick={() => open(n.page)}
-                >
-                  {n.action}
-                </button>
-              </article>
-            ))}
-          </div>
-        ) : (
-          <p className="school-empty">Nenhuma ação com prazo próximo.</p>
-        )}
-      </Panel>
-      <Panel title="Próximos compromissos">
-        <RecordCards empty="Nenhum compromisso futuro na agenda.">
-          {state.events
-            .filter((e) => e.day >= today)
-            .sort((a, b) => a.day.localeCompare(b.day))
-            .slice(0, 3)
-            .map((e) => (
-              <RecordCard
-                key={e.id}
-                title={e.title}
-                detail={
-                  e.classId ? nameOf(state.classes, e.classId) : "Toda a escola"
-                }
-                eyebrow={`${br(e.day)}${e.time ? " · " + e.time : ""}`}
-                icon={CalendarDays}
-                action="Ver no calendário"
-                onOpen={() => open("agenda", e.day)}
-              />
-            ))}
-        </RecordCards>
-        <button className="school-secondary" onClick={() => open("agenda")}>
-          Abrir calendário
-        </button>
-      </Panel>
-    </>
   );
 }
 function schoolRoute() {
@@ -318,7 +199,8 @@ function App() {
     [error, setError] = useState(""),
     [page, setPage] = useState(() => schoolRoute().page),
     [mobile, setMobile] = useState(false),
-    [pending, setPending] = useState(0);
+    [pending, setPending] = useState(0),
+    [focusedStudent, setFocusedStudent] = useState(null);
   const syncLock = useRef(false);
   async function load() {
     try {
@@ -462,7 +344,7 @@ function App() {
   const current = allowed.find((n) => n[0] === page) || allowed[0];
   const [id, label] = current;
   const content = {
-    inicio: <Overview state={state} user={user} open={open} />,
+    inicio: <SchoolFeed state={state} user={user} open={open} />,
     matriculas: <Enrollment state={state} send={send} />,
     turmas: <Classes state={state} send={send} office={office} />,
     diario: <Diary state={state} send={send} initialId={routeDetail} />,
@@ -472,7 +354,13 @@ function App() {
     fechamento: <Closing state={state} send={send} office={office} />,
     apoio: <FollowUp state={state} send={send} initialId={routeDetail} />,
     familia: (
-      <Family state={state} user={user} send={send} initialDay={routeDetail} />
+      <Family
+        state={state}
+        user={user}
+        send={send}
+        initialDay={routeDetail}
+        onStudentFocus={setFocusedStudent}
+      />
     ),
     atividades: (
       <Activities state={state} send={send} initialId={routeDetail} />
@@ -489,11 +377,29 @@ function App() {
       />
     ),
     comunicados: (
-      <Notices state={state} send={send} staff={staff} office={office} />
+      <Notices
+        state={state}
+        send={send}
+        staff={staff}
+        office={office}
+        initialId={routeDetail}
+      />
     ),
     relatorios: <Reports state={state} />,
-    contas: <Accounts state={state} send={send} user={user} />,
-    config: (
+    contas: (
+      <Accounts state={state} send={send} user={user} demo={isPagesPreview} />
+    ),
+    config: isPagesPreview ? (
+      <Panel
+        title="Perfil em demonstração"
+        subtitle="As alterações feitas nesta escola de exemplo são guardadas neste navegador."
+      >
+        <p>Saia do perfil para explorar outra área.</p>
+        <button className="school-secondary" onClick={exit}>
+          Trocar de perfil
+        </button>
+      </Panel>
+    ) : (
       <Panel
         title="Alterar senha"
         subtitle="Depois da alteração, entre novamente com a nova senha."
@@ -580,6 +486,7 @@ function App() {
           <span>
             {roles[user.role]} <ChevronRight size={14} /> {label}
           </span>
+          {isPagesPreview && <span className="school-pill">Demonstração</span>}
           <strong>{user.name}</strong>
         </header>
         <main id="conteudo" tabIndex="-1" className="school-main">
@@ -620,7 +527,22 @@ function App() {
               {message}
             </div>
           )}
-          <div key={`${id}:${routeDetail || ""}`}>{content[id]}</div>
+          <div key={`${id}:${routeDetail || ""}`}>
+            {id === "inicio" || id === "agenda" ? (
+              content[id]
+            ) : (
+              <div className="workspace-feed">
+                <div className="workspace-main">{content[id]}</div>
+                <ContextRail
+                  page={id}
+                  state={state}
+                  user={user}
+                  studentId={focusedStudent}
+                  open={open}
+                />
+              </div>
+            )}
+          </div>
           <footer className="school-footer">PIES · Gestão escolar</footer>
         </main>
       </div>
