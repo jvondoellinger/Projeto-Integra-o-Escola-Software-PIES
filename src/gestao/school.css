@@ -421,6 +421,16 @@ body:has(.school-dialog[open]) .school-page-error {
   border-top: 1px solid #dbe6f7;
   padding-top: 12px;
 }
+.school-correction-form .school-dialog-actions > button {
+  min-height: 44px;
+  margin-top: 0;
+}
+@media (max-width: 759px) {
+  .school-correction-fields textarea {
+    height: 88px;
+    min-height: 88px;
+  }
+}
 @media (min-width: 760px) {
   .school-correction-form > .school-fields {
     grid-template-columns: minmax(0, 1.6fr) minmax(0, 1fr);
