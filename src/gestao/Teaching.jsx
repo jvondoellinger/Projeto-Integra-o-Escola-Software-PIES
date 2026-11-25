@@ -493,10 +493,11 @@ export function Evaluations({ state, send, initialId }) {
                   )}
                   <ActionForm
                     title={`Corrigir avaliação de ${s.name}`}
+                    dialogClassName="school-correction-dialog"
                     className="school-correction-form"
                     trigger="Lançar ou editar nota"
                     triggerClass="school-secondary"
-                    button={`Salvar avaliação de ${s.name}`}
+                    button="Salvar correção"
                     onSubmit={(d) =>
                       send("grade", {
                         ...d,
@@ -505,20 +506,32 @@ export function Evaluations({ state, send, initialId }) {
                       })
                     }
                   >
-                    <div className="school-correction-response">
-                      <p className="school-caption">{selected.title}</p>
-                      <h3>Resposta do aluno</h3>
-                      <p className="school-caption">{deliveryStatus}</p>
+                    <div className="school-correction-context">
+                      <p className="school-caption">{c.name}</p>
+                      <strong>{selected.title}</strong>
+                    </div>
+                    <section className="school-correction-response">
+                      <header>
+                        <h3>Resposta do aluno</h3>
+                        {submission && (
+                          <span className="school-pill">{deliveryStatus}</span>
+                        )}
+                      </header>
                       {submission && (
                         <p className="school-pre">{submission.text}</p>
                       )}
-                    </div>
-                    <div className="school-correction-fields">
+                      {!submission && (
+                        <p className="school-caption">{deliveryStatus}</p>
+                      )}
+                    </section>
+                    <section className="school-correction-fields">
+                      <h3>Nota e devolutiva</h3>
                       {c.stage !== "Educação Infantil" && (
                         <Field
-                          label={`Nota de ${s.name}`}
+                          label="Nota"
                           name="score"
                           type="number"
+                          className="school-correction-score"
                           min={0}
                           max={10}
                           step="0.01"
@@ -526,13 +539,14 @@ export function Evaluations({ state, send, initialId }) {
                         />
                       )}
                       <Field
-                        label={`Devolutiva de ${s.name}`}
+                        label="Devolutiva"
                         name="feedback"
                         type="textarea"
+                        rows={5}
                         value={g?.feedback}
                         optional={c.stage !== "Educação Infantil"}
                       />
-                    </div>
+                    </section>
                   </ActionForm>
                 </article>
               );

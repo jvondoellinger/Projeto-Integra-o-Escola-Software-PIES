@@ -182,12 +182,10 @@ test("professor registra chamada desconectado, sincroniza, corrige e família re
     const correction = page.getByRole("dialog", {
       name: `Corrigir avaliação de ${s.name}`,
     });
-    await correction
-      .getByLabel(`Nota de ${s.name}`, { exact: true })
-      .fill(i ? "7" : "9");
+    await correction.getByLabel("Nota", { exact: true }).fill(i ? "7" : "9");
     await correction
       .getByRole("button", {
-        name: `Salvar avaliação de ${s.name}`,
+        name: "Salvar correção",
         exact: true,
       })
       .click();
@@ -531,23 +529,34 @@ test("professor consulta a entrega dentro do diálogo ao lançar e editar a nota
   const response = correction.getByText(answer, { exact: true });
   await expect(response).toBeVisible();
   expect(await response.textContent()).toBe(answer);
-  await correction.getByLabel(`Nota de ${fixture.s.name}`).fill("8");
-  await correction
-    .getByLabel(`Devolutiva de ${fixture.s.name}`)
-    .fill("Boa explicação.");
-  await correction
-    .getByRole("button", { name: `Salvar avaliação de ${fixture.s.name}` })
-    .click();
+  const correctionLayout = () =>
+    correction.evaluate((dialog) => {
+      const response = dialog
+        .querySelector(".school-correction-response")
+        .getBoundingClientRect();
+      const grading = dialog
+        .querySelector(".school-correction-fields")
+        .getBoundingClientRect();
+      return {
+        columns: response.right <= grading.left,
+        stacked: response.bottom <= grading.top,
+      };
+    });
+  expect(await correctionLayout()).toEqual({ columns: true, stacked: false });
+  await page.setViewportSize({ width: 390, height: 750 });
+  expect(await correctionLayout()).toEqual({ columns: false, stacked: true });
+  await page.setViewportSize({ width: 1440, height: 1000 });
+  await correction.getByLabel("Nota").fill("8");
+  await correction.getByLabel("Devolutiva").fill("Boa explicação.");
+  await correction.getByRole("button", { name: "Salvar correção" }).click();
   await expect(correction).toHaveCount(0);
 
   await student.getByRole("button", { name: "Lançar ou editar nota" }).click();
   await expect(response).toBeVisible();
-  await expect(correction.getByLabel(`Nota de ${fixture.s.name}`)).toHaveValue(
-    "8",
+  await expect(correction.getByLabel("Nota")).toHaveValue("8");
+  await expect(correction.getByLabel("Devolutiva")).toHaveValue(
+    "Boa explicação.",
   );
-  await expect(
-    correction.getByLabel(`Devolutiva de ${fixture.s.name}`),
-  ).toHaveValue("Boa explicação.");
 });
 
 test("fechamento mostra turmas de todos os períodos e filtra sem seleção inicial", async ({
