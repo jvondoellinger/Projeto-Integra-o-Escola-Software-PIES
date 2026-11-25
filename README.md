@@ -1,5 +1,19 @@
 # Sistema Inteligente de Análise de Desempenho Escolar
 
+## Executar o frontend
+
+Requer Node.js 20.19+ ou 22.12+.
+
+```sh
+npm ci
+npm run dev
+```
+
+Para gerar a versão de produção: `npm run build`. Para executar os testes: `npx playwright install chromium` e `npm test`.
+
+Consulte [a documentação de implementação](docs/IMPLEMENTACAO.md) para escopo, armazenamento, validação e requisitos antes do uso institucional.
+
+
 ## Identidade do Projeto
 
 ### NEWMOON • COONTEX
