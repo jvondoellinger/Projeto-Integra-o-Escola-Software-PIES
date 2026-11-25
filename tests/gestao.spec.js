@@ -416,3 +416,103 @@ test("barra móvel acompanha a rota e abre as demais áreas sem esconder o conte
     page.getByRole("navigation", { name: "Áreas do PIES" }),
   ).toBeVisible();
 });
+
+test("professor consulta a entrega dentro do diálogo ao lançar e editar a nota", async ({
+  page,
+  request,
+}) => {
+  const login = (email) =>
+    request.post(url + "/api/login", { data: { email, password } });
+  const command = async (kind, data) => {
+    const response = await request.post(url + "/api/command", {
+      data: { id: crypto.randomUUID(), kind, data },
+    });
+    expect(response.ok()).toBe(true);
+    return (await response.json()).state;
+  };
+  expect((await login("secretaria@ipe.example")).ok()).toBe(true);
+  const { state } = await (await request.get(url + "/api/workspace")).json();
+  await command("closure", {
+    classId: fixture.c.id,
+    periodId: state.periods[0].id,
+    state: "Reaberto",
+    reason: "Liberar correção da atividade complementar.",
+  });
+  const title = "Atividade complementar de frações";
+  const updated = await command("assessment", {
+    classId: fixture.c.id,
+    title,
+    day: fixture.day,
+    published: fixture.day,
+    format: "Atividade de casa",
+    instructions: "Explique como somou as frações.",
+    weight: 1,
+  });
+  const assessmentId = updated.assessments.find(
+    (item) => item.title === title,
+  ).id;
+  expect((await login("aluna@ipe.example")).ok()).toBe(true);
+  const draft = "Primeira tentativa ainda não enviada.";
+  await command("submission", {
+    assessmentId,
+    studentId: fixture.s.id,
+    action: "rascunho",
+    text: draft,
+  });
+
+  await signIn(page, "professor@ipe.example");
+  await go(page, "Avaliações");
+  const assessment = page.locator(".record-card").filter({
+    has: page.getByRole("heading", { name: title, exact: true }),
+  });
+  const student = page.locator(".school-record").filter({
+    has: page.getByRole("heading", { name: fixture.s.name, exact: true }),
+  });
+  const correction = page.getByRole("dialog", {
+    name: `Corrigir avaliação de ${fixture.s.name}`,
+  });
+  const openCorrection = async () => {
+    await assessment.getByRole("button", { name: "Abrir correção" }).click();
+    await student
+      .getByRole("button", { name: "Lançar ou editar nota" })
+      .click();
+  };
+  await openCorrection();
+  await expect(
+    correction.getByText("Nenhuma resposta enviada pelo portal"),
+  ).toBeVisible();
+  await expect(page.getByText(draft, { exact: true })).toHaveCount(0);
+  await page.keyboard.press("Escape");
+
+  const answer =
+    "Encontrei um denominador comum.\nDepois somei os numeradores.";
+  await command("submission", {
+    assessmentId,
+    studentId: fixture.s.id,
+    action: "entregar",
+    text: answer,
+  });
+  await page.reload();
+  await openCorrection();
+  await expect(correction.getByText(/Entregue em/)).toBeVisible();
+  const response = correction.getByText(answer, { exact: true });
+  await expect(response).toBeVisible();
+  expect(await response.textContent()).toBe(answer);
+  await correction.getByLabel(`Nota de ${fixture.s.name}`).fill("8");
+  await correction
+    .getByLabel(`Devolutiva de ${fixture.s.name}`)
+    .fill("Boa explicação.");
+  await correction
+    .getByRole("button", { name: `Salvar avaliação de ${fixture.s.name}` })
+    .click();
+  await expect(correction).toHaveCount(0);
+
+  await student.getByRole("button", { name: "Lançar ou editar nota" }).click();
+  await expect(response).toBeVisible();
+  await expect(correction.getByLabel(`Nota de ${fixture.s.name}`)).toHaveValue(
+    "8",
+  );
+  await expect(
+    correction.getByLabel(`Devolutiva de ${fixture.s.name}`),
+  ).toHaveValue("Boa explicação.");
+});
