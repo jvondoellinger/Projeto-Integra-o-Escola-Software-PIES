@@ -10,6 +10,7 @@ import {
   today,
 } from "./store.mjs";
 import { report } from "./school.mjs";
+import { addSampleSubmissions } from "./sample-submissions.mjs";
 
 const terms = [
   ["1º bimestre", "02-01", "04-24"],
@@ -504,6 +505,7 @@ function seedCampus({ name, domain, groups, password, primary }) {
       action: "Publicado",
     });
   }
+  addSampleSubmissions(schoolData, day);
   saveSchool(schoolData);
   return {
     students: schoolData.students.length,

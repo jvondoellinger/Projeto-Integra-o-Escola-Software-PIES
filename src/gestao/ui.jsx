@@ -133,6 +133,7 @@ export function ActionForm({
   triggerClass,
   open,
   onDismiss,
+  dialogClassName,
   ...form
 }) {
   return (
@@ -142,6 +143,7 @@ export function ActionForm({
       triggerClass={triggerClass}
       open={open}
       onDismiss={onDismiss}
+      className={dialogClassName}
     >
       <Form {...form} />
     </ActionDialog>

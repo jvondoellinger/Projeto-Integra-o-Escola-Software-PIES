@@ -1,6 +1,7 @@
 import initSqlJs from "sql.js";
 import wasmURL from "sql.js/dist/sql-wasm.wasm?url";
 import { schoolSchema } from "../../server/schema.mjs";
+import { addSampleSubmissions } from "../../server/sample-submissions.mjs";
 
 let sql;
 export const db = {
@@ -149,5 +150,17 @@ export async function initSchool() {
           "INSERT INTO accounts(id,school,email,name,role,password,active) VALUES (?,?,?,?,?,?,?)",
         ).run(id, school, email, name, role, "", active);
     });
+  if (db.prepare("PRAGMA user_version").get().user_version < 1) {
+    atomic(() => {
+      if (snapshot) {
+        for (const { id } of db.prepare("SELECT id FROM schools").all()) {
+          const school = loadSchool(id);
+          if (addSampleSubmissions(school, today())) saveSchool(school);
+        }
+      }
+      db.exec("PRAGMA user_version = 1");
+    });
+    if (snapshot) await persist().catch(() => {});
+  }
   return seed.profiles;
 }

@@ -373,33 +373,68 @@ body:has(.school-dialog[open]) .school-page-error {
 .school-dialog button:disabled {
   opacity: 0.62;
 }
+.school-correction-dialog {
+  width: min(900px, calc(100% - 28px));
+}
 .school-correction-form > .school-fields {
   grid-template-columns: minmax(0, 1fr);
-  align-items: start;
+  gap: 14px;
+}
+.school-correction-context {
+  grid-column: 1 / -1;
+  padding-bottom: 12px;
+  border-bottom: 1px solid #dbe6f7;
+  overflow-wrap: anywhere;
+}
+.school-correction-context .school-caption {
+  margin: 0 0 3px;
+  font-size: 0.8rem;
 }
 .school-correction-response {
   border: 1px solid #d7e4f7;
   border-radius: 12px;
-  padding: 14px;
+  padding: clamp(12px, 2.5vw, 20px);
   background: #f5f9ff;
   overflow-wrap: anywhere;
 }
-.school-correction-response .school-caption {
-  margin: 0 0 8px;
+.school-correction-response > header {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 5px 10px;
 }
-.school-correction-response h3 + .school-caption {
-  margin: 4px 0 0;
-}
-.school-correction-response .school-pre {
+.school-correction-response p {
   margin-top: 10px;
+  margin-bottom: 0;
 }
 .school-correction-fields {
   display: grid;
+  align-content: start;
+  min-width: 0;
   gap: 12px;
 }
-@media (min-width: 620px) {
+.school-correction-fields .school-correction-score {
+  width: min(100%, 110px);
+}
+.school-correction-form .school-dialog-actions {
+  border-top: 1px solid #dbe6f7;
+  padding-top: 12px;
+}
+.school-correction-form .school-dialog-actions > button {
+  min-height: 44px;
+  margin-top: 0;
+}
+@media (max-width: 759px) {
+  .school-correction-fields textarea {
+    height: 88px;
+    min-height: 88px;
+  }
+}
+@media (min-width: 760px) {
   .school-correction-form > .school-fields {
-    grid-template-columns: minmax(0, 1.25fr) minmax(0, 1fr);
+    grid-template-columns: minmax(0, 1.6fr) minmax(0, 1fr);
+    gap: 18px 22px;
   }
 }
 .school-form > h2 {
