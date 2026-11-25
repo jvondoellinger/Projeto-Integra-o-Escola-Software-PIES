@@ -13,19 +13,19 @@ config:
     htmlLabels: false
     curve: linear
 ---
-flowchart TD
+flowchart LR
   UI["PIES no Cloudflare Pages<br/>Consulta ou alteração solicitada"]
   API["Edge Function no Supabase<br/>Valida a sessão e o perfil"]
   Mode{"Tipo de operação?"}
   UI --> API --> Mode
   subgraph R["Leitura"]
-    direction TB
+    direction LR
     Query["Consulta PostgreSQL<br/>JOINs, agregações e índices B-tree"]
     Scope["Filtra os registros pelo perfil<br/>View agrega indicadores da rede"]
     Query --> Scope
   end
   subgraph W["Escrita em uma transação ACID"]
-    direction TB
+    direction LR
     Lock["Bloqueia a linha da escola<br/>FOR UPDATE e controle de versão"]
     Duplicate{"Operação já registrada?"}
     Consistent{"Versão continua atual?"}
