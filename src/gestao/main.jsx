@@ -99,7 +99,7 @@ function Brand() {
         <GraduationCap size={27} />
       </span>
       <strong>
-        pies<span>.</span>
+        PIES<span>.</span>
       </strong>
     </div>
   );
