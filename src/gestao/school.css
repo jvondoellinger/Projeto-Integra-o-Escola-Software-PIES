@@ -186,6 +186,46 @@ a {
 .school-panel > h2 {
   margin-bottom: 12px;
 }
+.school-panel-toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px 16px;
+  margin-bottom: 14px;
+}
+.school-panel-toolbar .school-actions button svg,
+button.record-open svg {
+  vertical-align: middle;
+  margin-right: 6px;
+}
+.school-export-options {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(205px, 100%), 1fr));
+  gap: 10px;
+}
+.school-export-options button {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  min-width: 0;
+  padding: 14px;
+  border: 1px solid #c9dcf6;
+  background: #f5f9ff;
+  color: #153a71;
+  text-align: left;
+}
+.school-export-options button:hover {
+  background: #e8f2ff;
+}
+.school-export-options svg {
+  flex-shrink: 0;
+}
+.school-export-options small {
+  display: block;
+  margin-top: 4px;
+  color: #465e7c;
+}
 .school-panel > h3 {
   margin: 18px 0 8px;
 }
