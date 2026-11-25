@@ -1,3 +1,4 @@
+import { BookOpen, GraduationCap, School, Users } from "lucide-react";
 import React, { useState } from "react";
 import {
   Form,
@@ -12,6 +13,8 @@ import {
   download,
   parseCsv,
   grade,
+  RecordCards,
+  RecordCard,
 } from "./ui.jsx";
 
 export const roles = {
@@ -33,31 +36,30 @@ export function Accounts({ state, send, user }) {
   return (
     <>
       <Panel title="Contas da escola">
-        <Table
-          columns={["Pessoa", "E-mail", "Perfil", "Acesso"]}
-          rows={state.accounts.map((a) => [
-            a.id,
-            a.name,
-            a.email,
-            roles[a.role],
-            a.id === user.id || a.role === "rede" ? (
-              a.active ? (
-                "Ativo"
-              ) : (
-                "Suspenso"
-              )
-            ) : (
-              <button
-                className="school-secondary"
-                onClick={() =>
-                  send("deactivate", { id: a.id, active: !a.active })
-                }
-              >
-                {a.active ? "Suspender" : "Reativar"}
-              </button>
-            ),
-          ])}
-        />
+        <RecordCards limit={9}>
+          {state.accounts.map((a) => (
+            <RecordCard
+              key={a.id}
+              title={a.name}
+              eyebrow={roles[a.role]}
+              detail={a.email}
+              icon={Users}
+              tone={a.active ? "green" : "gold"}
+              action={
+                a.id === user.id || a.role === "rede"
+                  ? undefined
+                  : a.active
+                    ? "Suspender"
+                    : "Reativar"
+              }
+              onOpen={() => send("deactivate", { id: a.id, active: !a.active })}
+            >
+              <span className="school-pill">
+                {a.active ? "Ativo" : "Suspenso"}
+              </span>
+            </RecordCard>
+          ))}
+        </RecordCards>
       </Panel>
       <Panel title="Criar conta">
         <Form onSubmit={(d) => send("account", d)}>
@@ -83,6 +85,7 @@ export function Accounts({ state, send, user }) {
 export function Enrollment({ state, send }) {
   const [editing, setEditing] = useState(null),
     [movement, setMovement] = useState(null),
+    [movementStudent, setMovementStudent] = useState(""),
     [document, setDocument] = useState(null),
     [preview, setPreview] = useState([]),
     [csvError, setCsvError] = useState(""),
@@ -116,22 +119,47 @@ export function Enrollment({ state, send }) {
             onChange={(e) => setFilter(e.target.value)}
           />
         </label>
-        <Table
-          columns={["Estudante", "Matrícula", "Turmas ativas", "Ações"]}
-          rows={visible.map((s) => [
-            s.id,
-            s.name,
-            s.registration,
-            current
-              .filter((e) => e.studentId === s.id)
-              .map((e) => nameOf(state.classes, e.classId))
-              .join(", ") || "—",
-            <div className="school-actions">
-              <button onClick={() => setEditing(s)}>Editar vínculos</button>
-              <button onClick={() => setDocument(s.id)}>Documentos</button>
-            </div>,
-          ])}
-        />
+        <RecordCards key={filter} limit={9}>
+          {visible.map((s) => {
+            const groups = [
+              ...new Set(
+                current
+                  .filter((e) => e.studentId === s.id)
+                  .map((e) => {
+                    const c = state.classes.find((c) => c.id === e.classId);
+                    return c?.section || c?.name || "—";
+                  }),
+              ),
+            ];
+            return (
+              <RecordCard
+                key={s.id}
+                title={s.name}
+                eyebrow={`Matrícula ${s.registration}`}
+                detail={groups.join(", ") || "Sem turma ativa"}
+                icon={GraduationCap}
+              >
+                <div className="school-actions">
+                  <button onClick={() => setEditing(s)}>Editar vínculos</button>
+                  <button onClick={() => setDocument(s.id)}>Documentos</button>
+                  <button
+                    onClick={() => {
+                      setMovementStudent(s.id);
+                      setMovement(null);
+                      requestAnimationFrame(() =>
+                        window.document
+                          .querySelector("#situacao-matricula")
+                          ?.scrollIntoView({ block: "start" }),
+                      );
+                    }}
+                  >
+                    Movimentações
+                  </button>
+                </div>
+              </RecordCard>
+            );
+          })}
+        </RecordCards>
       </Panel>
       {pupil && (
         <Panel
@@ -267,26 +295,46 @@ export function Enrollment({ state, send }) {
         </Panel>
       </div>
       <Panel title="Movimentação e situação final">
-        <Table
-          columns={["Estudante", "Turma", "Início", "Situação", "Ação"]}
-          rows={state.enrollments.map((e) => [
-            e.id,
-            nameOf(state.students, e.studentId),
-            nameOf(state.classes, e.classId),
-            br(e.start),
-            e.result || "Matriculado",
-            !e.end ? (
-              <button
-                className="school-secondary"
-                onClick={() => setMovement(e)}
-              >
-                Registrar situação
-              </button>
-            ) : (
-              br(e.end)
-            ),
-          ])}
-        />
+        <div id="situacao-matricula">
+          <label className="school-filter">
+            Estudante da movimentação
+            <select
+              value={movementStudent}
+              onChange={(e) => {
+                setMovementStudent(e.target.value);
+                setMovement(null);
+              }}
+            >
+              <option value="">Selecione</option>
+              {state.students.map((s) => (
+                <option value={s.id} key={s.id}>
+                  {s.name}
+                </option>
+              ))}
+            </select>
+          </label>
+        </div>
+        <RecordCards
+          empty={
+            movementStudent
+              ? "Nenhuma matrícula encontrada."
+              : "Escolha um estudante para ver seu histórico de matrículas."
+          }
+        >
+          {state.enrollments
+            .filter((e) => e.studentId === movementStudent)
+            .map((e) => (
+              <RecordCard
+                key={e.id}
+                title={nameOf(state.classes, e.classId)}
+                eyebrow={e.result || "Matriculado"}
+                detail={`${br(e.start)}${e.end ? " a " + br(e.end) : ""}`}
+                icon={School}
+                action={!e.end ? "Registrar situação" : undefined}
+                onOpen={() => setMovement(e)}
+              />
+            ))}
+        </RecordCards>
         {movement && (
           <div className="school-grid">
             <Form
@@ -461,37 +509,29 @@ export function Classes({ state, send, office }) {
           {visible.length} de {state.classes.length} registros de turma e
           disciplina
         </p>
-        <Table
-          columns={[
-            "Turma",
-            "Etapa",
-            "Componente",
-            "Ano",
-            "Turno e horários",
-            "Equipe",
-          ]}
-          rows={visible.map((c) => [
-            c.id,
-            c.name,
-            c.stage,
-            c.subject,
-            c.year,
-            <span className="school-pre">
-              {c.shift}
-              {c.timetable && `\n${c.timetable}`}
-            </span>,
-            office ? (
-              <button
-                className="school-secondary"
-                onClick={() => setEditing(c)}
-              >
-                Editar turma
-              </button>
-            ) : (
-              c.teachers.map((id) => nameOf(state.assignees, id)).join(", ")
-            ),
-          ])}
-        />
+        <RecordCards
+          key={search + shift + subject}
+          limit={12}
+          empty="Nenhuma turma corresponde aos filtros."
+        >
+          {visible.map((c) => (
+            <RecordCard
+              key={c.id}
+              title={c.section || c.name}
+              eyebrow={`${c.shift} · ${c.year}`}
+              detail={c.subject}
+              icon={BookOpen}
+              tone={c.shift === "Manhã" ? "blue" : "green"}
+              action={office ? "Editar turma" : undefined}
+              onOpen={() => setEditing(c)}
+            >
+              <p className="record-detail school-pre">{c.timetable}</p>
+              <p className="record-detail">
+                {c.teachers.map((id) => nameOf(state.assignees, id)).join(", ")}
+              </p>
+            </RecordCard>
+          ))}
+        </RecordCards>
       </Panel>
       {office && (
         <Panel title={editing ? "Editar turma" : "Criar turma"}>
@@ -686,15 +726,29 @@ export function Reports({ state }) {
             </select>
           </label>
         </div>
-        <Table
-          columns={["Turma", "Período", "Boletins"]}
-          rows={selected.map((c) => [
-            c.id,
-            nameOf(state.classes, c.classId),
-            nameOf(state.periods, c.periodId),
-            c.publicRows.length,
-          ])}
-        />
+        <RecordCards
+          key={classId + periodId}
+          limit={6}
+          empty="Nenhum boletim publicado na seleção."
+        >
+          {selected.map((c) => (
+            <RecordCard
+              key={c.id}
+              title={nameOf(state.classes, c.classId)}
+              eyebrow={nameOf(state.periods, c.periodId)}
+              detail={`${c.publicRows.length} boletins publicados`}
+              icon={BookOpen}
+              action="Baixar boletins da turma"
+              onOpen={() =>
+                download(
+                  "boletins-da-turma.csv",
+                  ["estudante", "media", "frequencia"],
+                  c.publicRows.map((r) => [r.name, r.average, r.attendance]),
+                )
+              }
+            />
+          ))}
+        </RecordCards>
         <button
           className="school-secondary"
           disabled={!selected.length}
@@ -718,39 +772,47 @@ export function Reports({ state }) {
         </button>
       </Panel>
       <Panel title="Registro de alterações">
-        <Table
-          columns={["Data", "Responsável", "Operação", "Motivo"]}
-          rows={state.audit.map((a) => [
-            a.id,
-            new Date(a.at).toLocaleString("pt-BR", {
-              timeZone: "America/Sao_Paulo",
-            }),
-            a.account,
-            {
-              student: "Cadastro de estudante",
-              enroll: "Matrícula",
-              move: "Movimentação",
-              result: "Resultado final",
-              class: "Turma",
-              lesson: "Diário de classe",
-              grade: "Nota ou devolutiva",
-              closure: "Fechamento",
-              assessment: "Avaliação",
-              case: "Acompanhamento",
-              notice: "Comunicado",
-              account: "Conta",
-              deactivate: "Acesso",
-              period: "Período",
-              policy: "Regras escolares",
-              event: "Calendário",
-              decide: "Análise de justificativa",
-              justify: "Justificativa",
-              import: "Importação",
-              submission: "Entrega",
-            }[a.kind] || a.kind,
-            a.reason || a.action || "—",
-          ])}
-        />
+        <RecordCards limit={6} empty="Nenhuma alteração registrada.">
+          {state.audit.map((a) => {
+            const action =
+              {
+                student: "Cadastro de estudante",
+                enroll: "Matrícula",
+                move: "Movimentação",
+                result: "Resultado final",
+                class: "Turma",
+                lesson: "Diário de classe",
+                grade: "Nota ou devolutiva",
+                closure: "Fechamento",
+                assessment: "Avaliação",
+                case: "Acompanhamento",
+                notice: "Comunicado",
+                account: "Conta",
+                deactivate: "Acesso",
+                period: "Período",
+                policy: "Regras escolares",
+                event: "Calendário",
+                decide: "Análise de justificativa",
+                justify: "Justificativa",
+                import: "Importação",
+                submission: "Entrega",
+              }[a.kind] || a.kind;
+            return (
+              <RecordCard
+                key={a.id}
+                title={action}
+                eyebrow={new Date(a.at).toLocaleString("pt-BR", {
+                  timeZone: "America/Sao_Paulo",
+                })}
+                detail={a.account}
+              >
+                {(a.reason || a.action) && (
+                  <p className="record-detail">{a.reason || a.action}</p>
+                )}
+              </RecordCard>
+            );
+          })}
+        </RecordCards>
       </Panel>
     </>
   );

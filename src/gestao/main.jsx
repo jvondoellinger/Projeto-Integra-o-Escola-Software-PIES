@@ -21,7 +21,16 @@ import {
 import { Accounts, Enrollment, Classes, Reports, roles } from "./Office.jsx";
 import { Diary, Evaluations, Closing, FollowUp } from "./Teaching.jsx";
 import { Calendar, Notices, Family, Activities } from "./Community.jsx";
-import { Field, Form, Panel, Table, br, nameOf, nowDate } from "./ui.jsx";
+import {
+  Field,
+  Form,
+  Panel,
+  RecordCard,
+  RecordCards,
+  br,
+  nameOf,
+  nowDate,
+} from "./ui.jsx";
 import "@fontsource/dm-sans/latin-400.css";
 import "@fontsource/dm-sans/latin-600.css";
 import "@fontsource/dm-sans/latin-700.css";
@@ -167,23 +176,35 @@ function Overview({ state, user, open }) {
   if (user.role === "rede")
     return (
       <Panel title="Unidades da rede">
-        <Table
-          columns={[
-            "Unidade",
-            "Turmas",
-            "Estudantes ativos",
-            "Períodos publicados",
-            "Acompanhamentos abertos",
-          ]}
-          rows={state.schools.map((s) => [
-            s.id,
-            s.name,
-            s.classes,
-            s.students,
-            s.published,
-            s.openCases,
-          ])}
-        />
+        <RecordCards>
+          {state.schools.map((s) => (
+            <RecordCard
+              key={s.id}
+              title={s.name}
+              icon={School}
+              eyebrow="Unidade escolar"
+            >
+              <dl className="record-metrics">
+                <div>
+                  <dt>Estudantes ativos</dt>
+                  <dd>{s.students}</dd>
+                </div>
+                <div>
+                  <dt>Turmas e disciplinas</dt>
+                  <dd>{s.classes}</dd>
+                </div>
+                <div>
+                  <dt>Períodos publicados</dt>
+                  <dd>{s.published}</dd>
+                </div>
+                <div>
+                  <dt>Acompanhamentos abertos</dt>
+                  <dd>{s.openCases}</dd>
+                </div>
+              </dl>
+            </RecordCard>
+          ))}
+        </RecordCards>
       </Panel>
     );
   const notifications = state.notifications || [];
@@ -255,19 +276,25 @@ function Overview({ state, user, open }) {
         )}
       </Panel>
       <Panel title="Próximos compromissos">
-        <Table
-          columns={["Data", "Compromisso", "Turma"]}
-          rows={state.events
+        <RecordCards empty="Nenhum compromisso futuro na agenda.">
+          {state.events
             .filter((e) => e.day >= today)
             .sort((a, b) => a.day.localeCompare(b.day))
-            .slice(0, 6)
-            .map((e) => [
-              e.id,
-              br(e.day),
-              e.title,
-              e.classId ? nameOf(state.classes, e.classId) : "Toda a escola",
-            ])}
-        />
+            .slice(0, 3)
+            .map((e) => (
+              <RecordCard
+                key={e.id}
+                title={e.title}
+                detail={
+                  e.classId ? nameOf(state.classes, e.classId) : "Toda a escola"
+                }
+                eyebrow={`${br(e.day)}${e.time ? " · " + e.time : ""}`}
+                icon={CalendarDays}
+                action="Ver no calendário"
+                onOpen={() => open("agenda", e.day)}
+              />
+            ))}
+        </RecordCards>
         <button className="school-secondary" onClick={() => open("agenda")}>
           Abrir calendário
         </button>
@@ -275,13 +302,21 @@ function Overview({ state, user, open }) {
     </>
   );
 }
+function schoolRoute() {
+  const [page, query] = location.hash.slice(1).split("?");
+  return {
+    page: page || "inicio",
+    detail: new URLSearchParams(query).get("detail"),
+  };
+}
 function App() {
   const [session, setSession] = useState(null),
     [loading, setLoading] = useState(true),
     [profiles, setProfiles] = useState([]),
+    [routeDetail, setRouteDetail] = useState(() => schoolRoute().detail),
     [message, setMessage] = useState(""),
     [error, setError] = useState(""),
-    [page, setPage] = useState(() => location.hash.slice(1) || "inicio"),
+    [page, setPage] = useState(() => schoolRoute().page),
     [mobile, setMobile] = useState(false),
     [pending, setPending] = useState(0);
   const syncLock = useRef(false);
@@ -300,7 +335,11 @@ function App() {
   }
   useEffect(() => {
     load();
-    const route = () => setPage(location.hash.slice(1) || "inicio");
+    const route = () => {
+      const next = schoolRoute();
+      setPage(next.page);
+      setRouteDetail(next.detail);
+    };
     window.addEventListener("hashchange", route);
     return () => window.removeEventListener("hashchange", route);
   }, []);
@@ -313,9 +352,10 @@ function App() {
     }, 45000);
     return () => clearInterval(interval);
   }, [user?.id]);
-  function open(id) {
+  function open(id, detail = null) {
+    setRouteDetail(detail);
     setPage(id);
-    location.hash = id;
+    location.hash = detail ? `${id}?detail=${encodeURIComponent(detail)}` : id;
     setMobile(false);
     setError("");
     setMessage("");
@@ -425,14 +465,28 @@ function App() {
     inicio: <Overview state={state} user={user} open={open} />,
     matriculas: <Enrollment state={state} send={send} />,
     turmas: <Classes state={state} send={send} office={office} />,
-    diario: <Diary state={state} send={send} />,
-    avaliacoes: <Evaluations state={state} send={send} />,
+    diario: <Diary state={state} send={send} initialId={routeDetail} />,
+    avaliacoes: (
+      <Evaluations state={state} send={send} initialId={routeDetail} />
+    ),
     fechamento: <Closing state={state} send={send} office={office} />,
-    apoio: <FollowUp state={state} send={send} />,
-    familia: <Family state={state} user={user} send={send} />,
-    atividades: <Activities state={state} user={user} send={send} />,
+    apoio: <FollowUp state={state} send={send} initialId={routeDetail} />,
+    familia: (
+      <Family state={state} user={user} send={send} initialDay={routeDetail} />
+    ),
+    atividades: (
+      <Activities state={state} send={send} initialId={routeDetail} />
+    ),
     agenda: (
-      <Calendar state={state} send={send} staff={staff} office={office} />
+      <Calendar
+        state={state}
+        send={send}
+        staff={staff}
+        office={office}
+        open={open}
+        student={user.role === "aluno"}
+        initialDay={routeDetail}
+      />
     ),
     comunicados: (
       <Notices state={state} send={send} staff={staff} office={office} />
@@ -566,7 +620,7 @@ function App() {
               {message}
             </div>
           )}
-          <div key={id}>{content[id]}</div>
+          <div key={`${id}:${routeDetail || ""}`}>{content[id]}</div>
           <footer className="school-footer">PIES · Gestão escolar</footer>
         </main>
       </div>

@@ -127,6 +127,80 @@ export function Print({ label = "Imprimir documento" }) {
     </button>
   );
 }
+
+export function RecordCards({
+  children,
+  empty = "Nenhum registro encontrado.",
+  limit = 0,
+}) {
+  const [page, setPage] = React.useState(0);
+  const cards = React.Children.toArray(children);
+  const last = limit ? Math.max(0, Math.ceil(cards.length / limit) - 1) : 0;
+  const shown = Math.min(page, last);
+  if (!cards.length) return <p className="school-empty">{empty}</p>;
+  return (
+    <>
+      <div className="record-grid">
+        {limit ? cards.slice(shown * limit, (shown + 1) * limit) : cards}
+      </div>
+      {last > 0 && (
+        <div
+          className="school-actions record-pagination"
+          aria-label="Páginas de registros"
+        >
+          <button disabled={shown === 0} onClick={() => setPage(shown - 1)}>
+            Anterior
+          </button>
+          <span aria-live="polite">
+            {shown * limit + 1}–{Math.min((shown + 1) * limit, cards.length)} de{" "}
+            {cards.length}
+          </span>
+          <button disabled={shown >= last} onClick={() => setPage(shown + 1)}>
+            Próxima
+          </button>
+        </div>
+      )}
+    </>
+  );
+}
+
+export function RecordCard({
+  title,
+  eyebrow,
+  detail,
+  icon: Icon,
+  tone = "green",
+  action,
+  onOpen,
+  selected = false,
+  children,
+}) {
+  return (
+    <article
+      className={`record-card tone-${tone}${selected ? " is-selected" : ""}`}
+    >
+      {Icon && (
+        <span className="record-icon">
+          <Icon size={21} aria-hidden="true" />
+        </span>
+      )}
+      {eyebrow && <span className="record-eyebrow">{eyebrow}</span>}
+      <h3>{title}</h3>
+      {detail && <p className="record-detail">{detail}</p>}
+      {children}
+      {action && (
+        <button
+          type="button"
+          className="record-open"
+          onClick={onOpen}
+          aria-pressed={selected || undefined}
+        >
+          {action}
+        </button>
+      )}
+    </article>
+  );
+}
 export function download(name, columns, rows) {
   const escape = (value) => {
     const s = String(value ?? "");

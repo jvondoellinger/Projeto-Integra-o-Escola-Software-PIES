@@ -519,7 +519,9 @@ a {
   .school-main {
     padding: 0;
   }
-  .school-main > div:has(.print-target) > :not(.print-target) {
+  .school-main
+    > div:has(.print-target)
+    > :not(:has(.print-target), .print-target) {
     display: none !important;
   }
   .print-target {
@@ -538,4 +540,333 @@ a {
 }
 .school-quick-access .school-actions {
   gap: 8px;
+}
+
+.record-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(220px, 100%), 1fr));
+  gap: 14px;
+  margin: 12px 0;
+}
+.record-card {
+  --accent-bg: #e5f1e8;
+  --accent: #24553f;
+  position: relative;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  align-items: flex-start;
+  border: 1px solid #d7e4da;
+  border-radius: 12px;
+  padding: 17px;
+  background: #fcfefc;
+  overflow-wrap: anywhere;
+}
+.record-card.tone-blue {
+  --accent-bg: #e5eff8;
+  --accent: #244e70;
+}
+.record-card.tone-gold {
+  --accent-bg: #faf0d7;
+  --accent: #725411;
+}
+.record-card h3 {
+  font-size: 1.02rem;
+  line-height: 1.3;
+}
+.record-icon {
+  display: grid;
+  place-items: center;
+  border-radius: 9px;
+  background: var(--accent-bg);
+  color: var(--accent);
+  width: 39px;
+  height: 39px;
+}
+.record-eyebrow {
+  font-size: 0.77rem;
+  font-weight: 700;
+  color: var(--accent);
+}
+.record-detail {
+  font-size: 0.87rem;
+  color: #416254;
+}
+.record-open {
+  background: var(--accent-bg);
+  color: var(--accent);
+  border: 1px solid transparent;
+  padding: 8px 11px;
+  font-weight: 700;
+  font-size: 0.84rem;
+  margin-top: auto;
+}
+.record-card:not(:has(form, .school-actions)) .record-open::after {
+  position: absolute;
+  inset: 0;
+  content: "";
+  border-radius: 12px;
+}
+.record-card:has(.record-open:hover),
+.record-card.is-selected {
+  border-color: var(--accent);
+}
+.record-card:has(.record-open:focus-visible) {
+  outline: 3px solid #a66c16;
+  outline-offset: 2px;
+}
+.record-metrics {
+  display: flex;
+  gap: 15px;
+  flex-wrap: wrap;
+  margin: 6px 0;
+}
+.record-metrics div {
+  display: grid;
+  gap: 4px;
+}
+.record-metrics dt {
+  font-size: 0.73rem;
+  color: #416254;
+}
+.record-metrics dd {
+  margin: 0;
+  font:
+    800 1.18rem Manrope,
+    sans-serif;
+}
+.record-pagination {
+  justify-content: center;
+  padding: 8px;
+  font-size: 0.82rem;
+}
+.period-tabs .is-active {
+  background: #195641;
+  border-color: #195641;
+  color: white;
+}
+.day-agenda > h2,
+.calendar-side > h3 {
+  text-transform: none;
+}
+.day-agenda > .school-primary {
+  margin-bottom: 8px;
+}
+.calendar-split {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1.1fr);
+  gap: 22px;
+}
+.month-calendar {
+  min-width: 0;
+  border: 1px solid #d8e5dc;
+  border-radius: 12px;
+  background: #fff;
+  padding: 10px;
+}
+.month-toolbar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 5px;
+  margin: 3px 4px 12px;
+}
+.month-toolbar h3 {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  text-transform: none;
+}
+.month-toolbar .school-actions {
+  gap: 4px;
+  flex-wrap: nowrap;
+}
+.month-toolbar button {
+  display: grid;
+  place-items: center;
+  min-width: 34px;
+  padding: 6px;
+}
+.month-grid {
+  display: grid;
+  grid-template-columns: repeat(7, minmax(0, 1fr));
+  gap: 4px;
+}
+.month-weekday {
+  text-align: center;
+  font-size: 0.75rem;
+  font-weight: 700;
+  color: #476758;
+  padding: 4px 0;
+}
+.month-day {
+  text-align: left;
+  background: #f5f9f5;
+  color: #19392f;
+  min-width: 0;
+  min-height: 91px;
+  align-self: stretch;
+  border: 1px solid #e3ebe4;
+  border-radius: 7px;
+  padding: 6px;
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  overflow: hidden;
+}
+.month-day.outside {
+  background: #fafafa;
+  color: #65766d;
+}
+.month-day[aria-pressed="true"] {
+  background: #e0f1e6;
+  border-color: #3d745b;
+  box-shadow: inset 0 0 0 1px #3d745b;
+}
+.month-day[aria-current="date"] .month-number {
+  background: #195641;
+  color: white;
+  border-radius: 50%;
+  min-width: 22px;
+  height: 22px;
+  text-align: center;
+}
+.month-number {
+  font-weight: 700;
+  font-size: 0.78rem;
+  line-height: 22px;
+  align-self: flex-start;
+}
+.month-count {
+  position: absolute;
+  top: 7px;
+  right: 6px;
+  font-size: 0.65rem;
+  font-weight: 700;
+  color: #345a49;
+  background: #e1efe5;
+  border-radius: 5px;
+  padding: 1px 4px;
+}
+.month-day-items {
+  width: 100%;
+  display: grid;
+  gap: 3px;
+}
+.month-chip {
+  font-size: 0.68rem;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  background: #e4f0e6;
+  color: #264d3b;
+  padding: 2px 4px;
+  border-radius: 3px;
+}
+.month-chip.blue {
+  background: #e3eefa;
+  color: #204c75;
+}
+.month-chip.gold {
+  background: #f8efd8;
+  color: #735317;
+}
+.month-extra {
+  font-size: 0.64rem;
+  color: #476758;
+}
+.month-calendar-compact .month-day {
+  min-height: 41px;
+}
+.calendar-side {
+  min-width: 0;
+}
+.calendar-side .record-grid {
+  grid-template-columns: minmax(0, 1fr);
+}
+@media (max-width: 700px) {
+  .calendar-split {
+    grid-template-columns: 1fr;
+  }
+  .month-day {
+    min-height: 42px;
+    padding: 3px;
+  }
+  .month-grid {
+    gap: 2px;
+  }
+  .month-day-items {
+    display: none;
+  }
+  .month-count {
+    top: auto;
+    bottom: 3px;
+    right: 3px;
+  }
+  .month-toolbar h3 {
+    font-size: 0.91rem;
+  }
+  .month-toolbar h3 svg {
+    display: none;
+  }
+  .month-calendar {
+    padding: 6px;
+  }
+  .record-grid {
+    gap: 9px;
+  }
+}
+@media print {
+  .school-main
+    > div:has(.print-target)
+    > :not(:has(.print-target), .print-target) {
+    display: none !important;
+  }
+}
+
+.calendar-layout {
+  display: grid;
+  grid-template-columns: minmax(0, 2.15fr) minmax(245px, 1fr);
+  gap: 18px;
+  align-items: start;
+}
+.calendar-layout > .school-panel {
+  padding: 19px;
+}
+.calendar-layout .day-agenda .record-grid {
+  grid-template-columns: 1fr;
+}
+.calendar-layout .day-agenda .school-fields {
+  grid-template-columns: 1fr;
+}
+.calendar-layout .day-agenda h2 {
+  margin-bottom: 15px;
+}
+.calendar-layout .month-calendar {
+  padding: 7px;
+}
+.calendar-layout .month-day {
+  min-height: 84px;
+}
+@media (max-width: 1080px) {
+  .calendar-layout {
+    display: block;
+  }
+}
+@media (max-width: 700px) {
+  .calendar-layout .month-day {
+    min-height: 43px;
+  }
+  .calendar-layout > .school-panel {
+    padding: 12px;
+  }
+}
+
+.school-form select,
+.school-filters select,
+.school-filter select {
+  appearance: auto;
+  padding-right: 12px !important;
 }

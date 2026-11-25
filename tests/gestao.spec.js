@@ -117,7 +117,7 @@ test("professor registra chamada desconectado, sincroniza, corrige e família re
   await context.setOffline(false);
   await expect(page.getByText("1 chamada(s) aguardando envio")).toHaveCount(0);
   await expect(
-    page.getByRole("cell", { name: "Operações e problemas" }),
+    page.getByRole("heading", { name: "Operações e problemas" }),
   ).toBeVisible();
   await go(page, "Avaliações");
   await page.getByLabel("Turma da avaliação").selectOption(fixture.c.id);
@@ -210,4 +210,49 @@ test("API isola escolas e bloqueia alterações de professor em período publica
     },
   });
   expect(forbidden.status()).toBe(403);
+});
+
+test("calendário mensal permite abrir o dia, criar compromisso e acessar a prova", async ({
+  page,
+}) => {
+  await signIn(page, "secretaria@ipe.example");
+  await go(page, "Calendário");
+  const calendar = page.getByRole("region", { name: "Calendário mensal" });
+  const month = await calendar.getByRole("heading", { level: 3 }).textContent();
+  await calendar.getByRole("button", { name: "Próximo mês" }).click();
+  await expect(calendar.getByRole("heading", { level: 3 })).not.toHaveText(
+    month,
+  );
+  await calendar.getByRole("button", { name: "Hoje", exact: true }).click();
+  await expect(calendar.getByRole("heading", { level: 3 })).toHaveText(month);
+  const day = calendar.locator(`[data-day="${fixture.day}"]`);
+  await expect(day).toHaveAttribute("aria-pressed", "true");
+  await day.press("ArrowRight");
+  await expect(day).toHaveAttribute("aria-pressed", "false");
+  await day.click();
+  await page.getByRole("button", { name: "Adicionar compromisso" }).click();
+  await expect(page.getByLabel("Data do compromisso")).toHaveValue(fixture.day);
+  await page
+    .getByLabel("Compromisso", { exact: true })
+    .fill("Encontro de leitura");
+  await page
+    .getByRole("combobox", { name: "Tipo do novo compromisso" })
+    .selectOption("Reunião");
+  await page.getByRole("button", { name: "Salvar compromisso" }).click();
+  await expect(
+    page.getByRole("heading", { name: "Encontro de leitura", exact: true }),
+  ).toBeVisible();
+  await page
+    .getByRole("button", { name: "Abrir avaliações", exact: true })
+    .click();
+  await expect(
+    page.getByRole("heading", {
+      name: "Correção · Prova de operações",
+      exact: true,
+    }),
+  ).toBeVisible();
+  await page.goBack();
+  await expect(
+    page.getByRole("heading", { name: "Encontro de leitura", exact: true }),
+  ).toBeVisible();
 });
