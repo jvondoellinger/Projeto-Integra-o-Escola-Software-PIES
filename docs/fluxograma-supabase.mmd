@@ -1,0 +1,65 @@
+---
+config:
+  theme: base
+  themeVariables:
+    fontFamily: Arial
+    primaryColor: "#e8f2ff"
+    primaryTextColor: "#142d53"
+    primaryBorderColor: "#9ab9e6"
+    lineColor: "#45668d"
+    clusterBkg: "#f7faff"
+    clusterBorder: "#c6d8f0"
+  flowchart:
+    htmlLabels: false
+    curve: linear
+---
+flowchart TD
+  UI["PIES no Cloudflare Pages<br/>Consulta ou alteração solicitada"]
+  API["Edge Function no Supabase<br/>Valida a sessão e o perfil"]
+  Mode{"Tipo de operação?"}
+  UI --> API --> Mode
+  subgraph R["Leitura"]
+    direction TB
+    Query["Consulta PostgreSQL<br/>JOINs, agregações e índices B-tree"]
+    Scope["Filtra os registros pelo perfil<br/>View agrega indicadores da rede"]
+    Query --> Scope
+  end
+  subgraph W["Escrita em uma transação ACID"]
+    direction TB
+    Lock["Bloqueia a linha da escola<br/>FOR UPDATE e controle de versão"]
+    Duplicate{"Operação já registrada?"}
+    Consistent{"Versão continua atual?"}
+    Retry["Lê a revisão recente<br/>e revalida a alteração"]
+    Rules["Aplica as regras acadêmicas<br/>PK, FK, UNIQUE e CHECK"]
+    Valid{"Gravação válida?"}
+    Rollback["ROLLBACK<br/>Nenhuma alteração parcial"]
+    Commit["COMMIT<br/>Dados, auditoria e ID da operação"]
+    Lock --> Duplicate
+    Duplicate -->|Não| Consistent
+    Consistent -->|Não| Retry
+    Retry --> Lock
+    Consistent -->|Sim| Rules --> Valid
+    Valid -->|Não| Rollback
+    Valid -->|Sim| Commit
+  end
+  subgraph D["Estrutura relacional do PostgreSQL"]
+    direction LR
+    Base["Escolas · alunos · turmas · períodos"]
+    Relations["Matrículas e vínculos N:N<br/>Docentes e responsáveis"]
+    Academic["Avaliações · notas · entregas<br/>Aulas · presenças · boletins"]
+    Base --> Relations --> Academic
+  end
+  Mode -->|Consulta| Query
+  Mode -->|Alteração| Lock
+  Academic -.-> Query
+  Rules -.-> Academic
+  Scope --> Browser["Tela atualizada com os dados do banco"]
+  Duplicate -->|Sim, devolve estado atual| Browser
+  Commit --> Browser
+  Rollback --> Message["Exibe a validação na tela"]
+  classDef key fill:#163a72,color:#ffffff,stroke:#163a72;
+  classDef good fill:#e2f3eb,color:#144b38,stroke:#8bc4ac;
+  classDef rejected fill:#fff2e8,color:#763d1c,stroke:#efbb93;
+  class UI,API key;
+  class Commit,Browser good;
+  class Rollback,Message rejected;

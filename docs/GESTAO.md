@@ -1,6 +1,6 @@
 # PIES Gestão escolar
 
-A demonstração pública está no [Cloudflare Pages](https://pies-escolar.pages.dev/). `npm run build:pages` gera `dist-pages/` a partir de uma escola de exemplo criada em memória. O visitante escolhe um perfil e as alterações ficam no IndexedDB do navegador. O build omite credenciais e não lê o banco da instalação escolar.
+A versão pública está no [Cloudflare Pages](https://pies-escolar.pages.dev/). A interface consulta e grava no PostgreSQL pela Edge Function do Supabase. Veja [modelo, fluxograma e build público](SUPABASE.md).
 
 A versão autenticada usa Node.js 22 ou superior e SQLite. A raiz servida por `npm start` abre a gestão escolar. `npm run dev` continua disponível para o frontend anterior e disponibiliza a gestão em `/gestao.html` com o servidor da API ativo na porta 4173.
 

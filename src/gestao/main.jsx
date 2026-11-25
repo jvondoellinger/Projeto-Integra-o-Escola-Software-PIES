@@ -58,7 +58,7 @@ const headings = {
   fechamento: "Fechamento e boletins",
   familia: "Boletins e frequência",
 };
-const isPagesPreview = import.meta.env.MODE === "pages";
+const usesHostedDatabase = import.meta.env.MODE === "pages";
 async function request(path, body) {
   if (import.meta.env.MODE === "pages")
     return (await import("./pagesRequest.js")).pagesRequest(path, body);
@@ -79,6 +79,7 @@ async function request(path, body) {
 }
 const queueKey = (user) => `pies-diario-pendente-${user.id}`;
 function queued(user) {
+  if (usesHostedDatabase) return [];
   try {
     return JSON.parse(localStorage.getItem(queueKey(user))) || [];
   } catch {
@@ -86,6 +87,7 @@ function queued(user) {
   }
 }
 function writeQueue(user, items) {
+  if (usesHostedDatabase) return;
   if (items.length) localStorage.setItem(queueKey(user), JSON.stringify(items));
   else localStorage.removeItem(queueKey(user));
 }
@@ -114,13 +116,10 @@ function Login({ onLogin, error, profiles }) {
         <p>Da matrícula à chamada, da avaliação ao boletim.</p>
       </section>
       <main className="school-login-form">
-        {isPagesPreview ? (
+        {usesHostedDatabase ? (
           <div className="pages-welcome">
             <h2>Explore o PIES</h2>
-            <p>
-              Escolha um perfil para navegar pela escola de exemplo. Alterações
-              ficam neste navegador.
-            </p>
+            <p>Escolha um perfil para acessar o ambiente acadêmico.</p>
           </div>
         ) : (
           <Form title="Acesse sua escola" button="Entrar" onSubmit={onLogin}>
@@ -146,7 +145,7 @@ function Login({ onLogin, error, profiles }) {
           >
             <h3 id="quick-access">Escolha um perfil</h3>
             <p className="school-caption">
-              {isPagesPreview
+              {usesHostedDatabase
                 ? "Escolha a área escolar que deseja explorar."
                 : "Entre direto ou use o e-mail do perfil com qualquer senha."}
             </p>
@@ -171,7 +170,7 @@ function Login({ onLogin, error, profiles }) {
           </p>
         )}
         <p className="school-caption">
-          {!isPagesPreview && (
+          {!usesHostedDatabase && (
             <>
               {!profiles.length &&
                 "Use a conta fornecida pela sua instituição. "}
@@ -272,6 +271,7 @@ function App() {
   async function send(kind, data, { offline = false } = {}) {
     setError("");
     setMessage("");
+    offline = offline && !usesHostedDatabase;
     const command = { kind, data, id: crypto.randomUUID() };
     try {
       let response;
@@ -408,12 +408,17 @@ function App() {
     ),
     relatorios: <Reports state={state} />,
     contas: (
-      <Accounts state={state} send={send} user={user} demo={isPagesPreview} />
+      <Accounts
+        state={state}
+        send={send}
+        user={user}
+        demo={usesHostedDatabase}
+      />
     ),
-    config: isPagesPreview ? (
+    config: usesHostedDatabase ? (
       <Panel
-        title="Perfil em demonstração"
-        subtitle="As alterações feitas nesta escola de exemplo são guardadas neste navegador."
+        title="Perfil escolar"
+        subtitle="Os registros são salvos no banco acadêmico."
       >
         <p>Saia do perfil para explorar outra área.</p>
         {exitAction("Trocar de perfil", "school-secondary")}
@@ -501,9 +506,6 @@ function App() {
             <span>
               {roles[user.role]} <ChevronRight size={14} /> {label}
             </span>
-            {isPagesPreview && (
-              <span className="school-pill">Demonstração</span>
-            )}
             <strong>{user.name}</strong>
             <button
               type="button"
